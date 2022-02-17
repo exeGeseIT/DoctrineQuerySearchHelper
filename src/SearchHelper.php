@@ -11,7 +11,7 @@ use function mb_strtolower;
 /**
  * Description of SearchHelper
  *
- * @author Dev0ne <dev@docatwork.fr>
+ * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
  */
 class SearchHelper
 {

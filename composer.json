@@ -1,0 +1,29 @@
+{
+    "name": "exegeseit/doctrinequerysearch-helper",
+    "description": "This package aims to facilitate the creation of dynamic WHERE clauses when using Doctrine\\ORM\\Querybuilder or Doctrine\\DBAL\\Querybuilder",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jean-Claude GLOMBARD",
+            "email": "jc.glombard@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^7.4 || ^8.0.2",
+        "doctrine/orm": "^2.9 || ^3.0",
+        "symfony/polyfill-ctype": "^1.0",
+        "symfony/polyfill-mbstring": "^1.0"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "ExeGeseIT\\DoctrineQuerySearchHelper\\": "src/"
+        }
+    }
+}

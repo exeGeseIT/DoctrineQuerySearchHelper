@@ -20,7 +20,7 @@ class SearchHelper
      * @param string $searched
      * @return string|array
      */
-    public static function sqlSearchString($searched): string
+    public static function sqlSearchString($searched)
     {
         if (is_iterable($searched) ) {
             $_s = [];
@@ -34,70 +34,59 @@ class SearchHelper
     }
 
 
+    /**
+     * 
+     * @param array $search
+     * @return array
+     */
     public static function parseSearchParameters(array $search): array
     {
         $clauseFilters = [];
 
         foreach ( $search as $ckey => $value ) {
+            
+            $matches = null;
+            preg_match('/(?P<filter>[^[:alnum:]]+)?(?P<key>[[:alnum:]].*)/i', $ckey, $matches);
 
-            $c = substr($ckey,0,2);
-            $key = substr($ckey,2);
-
-            if ( !in_array($c, ['<=', '>=', '==', '!=', '!%', '!_']) ) {
-                $c = null;
-                $key = $ckey;
-            }
-
-            if ( null === $c ) {
-                $c = substr($ckey,0,1);
-                $key = substr($ckey,1);
-
-                if ( !in_array($c, ['!', '=', '<', '>', '%', '_']) ) {
-                    $c = null;
-                    $key = $ckey;
-                }
-            }
+            $filter = SearchFilter::normalize($matches['filter']);
+            $key = $matches['key'];
 
             $_expFn = null;
-            if ( $c === '=' || $c === '==' ) {
+            if ( $filter === SearchFilter::EQUAL ) {
                $_expFn = is_array($value) ? 'in' : 'eq';
 
-            } elseif ( $c === '!=' ) {
+            } elseif ( $filter === SearchFilter::NOT_EQUAL ) {
                $_expFn = is_array($value) ? 'notIn' : 'neq';
 
-            } elseif ( in_array($c, ['_','!_']) ) {
-               $_expFn = $c === '_' ? 'isNull' : 'isNotNull';
+            } elseif ( in_array($filter, [SearchFilter::NULL, SearchFilter::NOT_NULL]) ) {
+               $_expFn = $filter === '_' ? 'isNull' : 'isNotNull';
                $value = '_NULL_';
 
             } elseif ( !empty($value) ) {
-                switch ( $c ) {
+                switch ( $filter ) {
 
-                    case '!':
-                        $_expFn = is_array($value) ? 'notIn' : 'neq';
-                        break;
-
-                    case '<':
+                    case SearchFilter::LOWER:
                         $_expFn = 'lt';
                         break;
 
-                    case '<=':
+                    case SearchFilter::LOWER_OR_EQUAL:
                         $_expFn = 'lte';
                         break;
 
-                    case '>':
+                    case SearchFilter::GREATER:
                         $_expFn = 'gt';
                         break;
 
-                    case '>=':
+                    case SearchFilter::GREATER_OR_EQUAL:
                         $_expFn = 'gte';
                         break;
 
-                    case '%':
+                    case SearchFilter::LIKE:
                         $_expFn = 'like';
                         $value = self::sqlSearchString($value);
                         break;
 
-                    case '!%':
+                    case SearchFilter::NOT_LIKE:
                         $_expFn = 'notLike';
                         $value = self::sqlSearchString($value);
                         break;

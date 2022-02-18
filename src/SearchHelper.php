@@ -36,7 +36,7 @@ class SearchHelper
 
     public static function parseSearchParameters(array $search): array
     {
-        $_search = [];
+        $clauseFilters = [];
 
         foreach ( $search as $ckey => $value ) {
 
@@ -109,14 +109,14 @@ class SearchHelper
             }
 
             if ( null !== $_expFn ) {
-                $_search[ $key ] = [
+                $clauseFilters[ $key ] = [
                     'value' => $value,
                     '_expFn' => $_expFn,
                 ];
             }
         }
 
-        return $_search;
+        return $clauseFilters;
     }
 
 
@@ -131,9 +131,9 @@ class SearchHelper
     public static function setQbSearchClause($qb, iterable $search, iterable $fields = [])
     {
         if ( $qb instanceof QueryBuilder ) {
-            self::setQbDQLSearchClause($qb, $search, $fields);
+            self::setQbDQLSearchClause($qb, self::parseSearchParameters($search), $fields);
         } elseif ( $qb instanceof QueryBuilderDBAL ) {
-            self::setQbDBALSearchClause($qb, $search, $fields);
+            self::setQbDBALSearchClause($qb, self::parseSearchParameters($search), $fields);
         } else {
             throw new InvalidArgumentException( sprintf('$qb should be instance of %s or %s class', QueryBuilder::class, QueryBuilderDBAL::class) );
         }
@@ -164,18 +164,18 @@ class SearchHelper
      *  DQL Helpers
      *
      ****************** */
-    private static function setQbDQLSearchClause(QueryBuilder $qb, iterable $searchParameters, iterable $fields)
+    private static function setQbDQLSearchClause(QueryBuilder $qb, iterable $clauseFilters, iterable $fields)
     {
         foreach ($fields as $searchKey => $field) {
-            if ( !isset($searchParameters[ $searchKey ]) ) {
+            if ( !isset($clauseFilters[ $searchKey ]) ) {
                 continue;
             }
             
-            $_expFn = $searchParameters[ $searchKey ]['_expFn'];
-            if ( is_array( $searchParameters[ $searchKey ]['value'] ) ) {
+            $_expFn = $clauseFilters[ $searchKey ]['_expFn'];
+            if ( is_array( $clauseFilters[ $searchKey ]['value'] ) ) {
                 $i = 0;
                 $orStatements = $qb->expr()->orX();
-                foreach ( $searchParameters[ $searchKey ]['value'] as $pattern ) {
+                foreach ( $clauseFilters[ $searchKey ]['value'] as $pattern ) {
                     $_searchKey = sprintf('%s_%d',$searchKey,$i++);
                     $orStatements->add(
                         $qb
@@ -186,8 +186,8 @@ class SearchHelper
                 $qb->andWhere($orStatements);
             } else {
                 $qb->andWhere($qb->expr()->$_expFn($field, ':'. $searchKey ));
-                if ( '_NULL_' !== $searchParameters[ $searchKey ]['value'] ) {
-                   $qb->setParameter( $searchKey , $searchParameters[ $searchKey ]['value']);
+                if ( '_NULL_' !== $clauseFilters[ $searchKey ]['value'] ) {
+                   $qb->setParameter( $searchKey , $clauseFilters[ $searchKey ]['value']);
                 }
             }
                 
@@ -212,18 +212,18 @@ class SearchHelper
      *  DBAL Helpers
      *
      ****************** */
-    public static function setQbDBALSearchClause(QueryBuilderDBAL $qb, iterable $searchParameters, iterable $fields)
+    public static function setQbDBALSearchClause(QueryBuilderDBAL $qb, iterable $clauseFilters, iterable $fields)
     {
         foreach ($fields as $searchKey => $field) {
-            if ( !isset($searchParameters[ $searchKey ]) ) {
+            if ( !isset($clauseFilters[ $searchKey ]) ) {
                 continue;
             }
             
-            $_expFn = $searchParameters[ $searchKey ]['_expFn'];
-            if ( is_array( $searchParameters[ $searchKey ]['value'] ) ) {
+            $_expFn = $clauseFilters[ $searchKey ]['_expFn'];
+            if ( is_array( $clauseFilters[ $searchKey ]['value'] ) ) {
                 $i = 0;
                 $orStatements = $qb->expr()->orX();
-                foreach ( $searchParameters[ $searchKey ]['value'] as $pattern ) {
+                foreach ( $clauseFilters[ $searchKey ]['value'] as $pattern ) {
                     $_searchKey = sprintf('%s_%d',$searchKey,$i++);
                     $orStatements->add(
                         $qb
@@ -234,12 +234,12 @@ class SearchHelper
                 $qb->andWhere($orStatements);
             } else {
                 $qb->andWhere($qb->expr()->$_expFn($field, ':'. $searchKey ));
-                if ( '_NULL_' !== $searchParameters[ $searchKey ]['value'] ) {
+                if ( '_NULL_' !== $clauseFilters[ $searchKey ]['value'] ) {
                     $_typeValue = null;
-                    if ( is_array( $searchParameters[ $searchKey ]['value'] ) ) {
-                        $_typeValue = is_int( $searchParameters[ $searchKey ]['value'][0] ) ? Connection::PARAM_INT_ARRAY : Connection::PARAM_STR_ARRAY;
+                    if ( is_array( $clauseFilters[ $searchKey ]['value'] ) ) {
+                        $_typeValue = is_int( $clauseFilters[ $searchKey ]['value'][0] ) ? Connection::PARAM_INT_ARRAY : Connection::PARAM_STR_ARRAY;
                     }
-                    $qb->setParameter( $searchKey , $searchParameters[ $searchKey ]['value'], $_typeValue);
+                    $qb->setParameter( $searchKey , $clauseFilters[ $searchKey ]['value'], $_typeValue);
                 }
             }
         }

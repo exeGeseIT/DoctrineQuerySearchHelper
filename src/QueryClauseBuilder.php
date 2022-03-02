@@ -98,7 +98,7 @@ class QueryClauseBuilder
             }
         }
         
-        return SearchHelper::parseSearchParameters($search);
+        return $search;
     }
             
 }

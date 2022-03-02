@@ -39,7 +39,7 @@ class SearchHelper
      * @param array $search
      * @return array
      */
-    public static function parseSearchParameters(array $search): array
+    private static function parseSearchParameters(array $search): array
     {
         $clauseFilters = [];
 

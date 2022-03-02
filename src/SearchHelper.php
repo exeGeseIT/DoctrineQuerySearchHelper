@@ -161,7 +161,7 @@ class SearchHelper
             }
             
             $_expFn = $clauseFilters[ $searchKey ]['_expFn'];
-            if ( is_array( $clauseFilters[ $searchKey ]['value'] ) ) {
+            if ( 'in' !== $_expFn && is_array( $clauseFilters[ $searchKey ]['value'] ) ) {
                 $i = 0;
                 $orStatements = $qb->expr()->orX();
                 foreach ( $clauseFilters[ $searchKey ]['value'] as $pattern ) {

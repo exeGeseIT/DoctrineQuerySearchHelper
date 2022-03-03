@@ -35,7 +35,6 @@ class MarketRepository extends ServiceEntityRepository
 {
     public function __construct(CacheInterface $cache, ManagerRegistry $registry)
     {
-        $this->cache = $cache;
         parent::__construct($registry, Market::class);
     }
 

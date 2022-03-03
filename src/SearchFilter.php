@@ -39,96 +39,117 @@ class SearchFilter
     }
     
     
+    /**
+     * if isset($value)  --> ...WHERE searchKey = $value
+     * if !isset($value) --> ...WHERE 1
+     * 
+     * @param string $searchKey
+     * @return string
+     */
+    public static function filter(string $searchKey): string
+    {
+        return trim($searchKey);
+    }
     
     /**
-     * ...WHERE field = $value
+     * ...WHERE searchKey = $value
+     * 
      * @param string $searchKey
      * @return string
      */
     public static function equal(string $searchKey): string
     {
-        return self::EQUAL . $searchKey;
+        return self::EQUAL . trim($searchKey);
     }
     /**
-     * ...WHERE field <> $value
+     * ...WHERE searchKey <> $value
+     * 
      * @param string $searchKey
      * @return string
      */
     public static function notEqual(string $searchKey): string
     {
-        return self::NOT_EQUAL . $searchKey;
+        return self::NOT_EQUAL . trim($searchKey);
     }
     /**
-     * ...WHERE field LIKE $value
+     * ...WHERE searchKey LIKE $value
+     * 
      * @param string $searchKey
      * @return string
      */
     public static function like(string $searchKey): string
     {
-        return self::LIKE . $searchKey;
+        return self::LIKE . trim($searchKey);
     }
     /**
-     * ...WHERE field NOT LIKE $value
+     * ...WHERE searchKey NOT LIKE $value
+     * 
      * @param string $searchKey
      * @return string
      */
     public static function notLike(string $searchKey): string
     {
-        return self::NOT_LIKE . $searchKey;
+        return self::NOT_LIKE . trim($searchKey);
     }
     /**
-     * ...WHERE field IS NULL
+     * ...WHERE searchKey IS NULL
+     * 
      * @param string $searchKey
      * @return string
      */
     public static function null(string $searchKey): string
     {
-        return self::NULL . $searchKey;
+        return self::NULL . trim($searchKey);
     }
     /**
-     * ...WHERE field IS NOT NULL
+     * ...WHERE searchKey IS NOT NULL
+     * 
      * @param string $searchKey
      * @return string
      */
     public static function notNull(string $searchKey): string
     {
-        return self::NOT_NULL . $searchKey;
+        return self::NOT_NULL . trim($searchKey);
     }
     /**
-     * ...WHERE field > $value
+     * ...WHERE searchKey > $value
+     * 
      * @param string $searchKey
      * @return string
      */
     public static function greater(string $searchKey): string
     {
-        return self::GREATER . $searchKey;
+        return self::GREATER . trim($searchKey);
     }
     /**
-     * ...WHERE field >= $value
+     * ...WHERE searchKey >= $value
+     * 
      * @param string $searchKey
      * @return string
      */
     public static function greaterOrEqual(string $searchKey): string
     {
-        return self::GREATER_OR_EQUAL . $searchKey;
+        return self::GREATER_OR_EQUAL . trim($searchKey);
     }
     /**
-     * ...WHERE field < $value
+     * ...WHERE searchKey < $value
+     * 
      * @param string $searchKey
      * @return string
      */
     public static function lower(string $searchKey): string
     {
-        return self::LOWER . $searchKey;
+        return self::LOWER . trim($searchKey);
     }
     /**
-     * ...WHERE field <= $value
+     * ...WHERE searchKey <= $value
+     * 
      * @param string $searchKey
      * @return string
      */
     public static function lowerOrEqual(string $searchKey): string
     {
-        return self::LOWER_OR_EQUAL . $searchKey;
+        return self::LOWER_OR_EQUAL . trim($searchKey);
     }
     
 }

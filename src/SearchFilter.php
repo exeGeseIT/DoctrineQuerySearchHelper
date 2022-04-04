@@ -20,10 +20,14 @@ class SearchFilter
     const LOWER = '<';
     const LOWER_OR_EQUAL = '<=';
     
+    const OR = '|';
+    const AND_OR = '&|';
+    
     private static function getAlias(): iterable
     {
         yield self::EQUAL => [ '==' ];
         yield self::NOT_EQUAL => [ '!=' ];
+        yield self::OR => [ '||' ];
     }
     
     public static function normalize(string $filter): string
@@ -150,6 +154,22 @@ class SearchFilter
     public static function lowerOrEqual(string $searchKey): string
     {
         return self::LOWER_OR_EQUAL . trim($searchKey);
+    }
+    /**
+     * ...WHERE ( .. OR .. OR ..)
+     * @return string
+     */
+    public static function andOr(): string
+    {
+        return self::AND_OR . bin2hex(random_bytes(10));
+    }
+    /**
+     * ...WHERE ( .. ) OR (...)
+     * @return string
+     */
+    public static function or(): string
+    {
+        return self::OR . bin2hex(random_bytes(10));
     }
     
 }

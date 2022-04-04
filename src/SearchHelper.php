@@ -109,7 +109,11 @@ class SearchHelper
             }
 
             if ( null !== $_expFn ) {
-                $clauseFilters[ $key ] = [
+                if ( !array_key_exists($key, $clauseFilters) ){
+                    $clauseFilters[ $key ] = [];
+                }
+                
+                $clauseFilters[ $key ][] = [
                     'value' => $value,
                     '_expFn' => $_expFn,
                 ];
@@ -171,26 +175,30 @@ class SearchHelper
                 continue;
             }
             
-            $_expFn = $whereFilters[ $searchKey ]['_expFn'];
-            $_value = $whereFilters[ $searchKey ]['value'];
-            if ( !in_array($_expFn, ['in','notIn']) && is_array($_value) ) {
-                $i = 0;
-                $orStatements = $qb->expr()->orX();
-                foreach ( $_value as $pattern ) {
-                    $_searchKey = sprintf('%s_%d',$searchKey,$i++);
-                    $orStatements->add(
-                        $qb
-                          ->setParameter( $_searchKey , $pattern)
-                          ->expr()->$_expFn($field, ':'. $_searchKey )
-                    );
-                }
-                $qb->andWhere($orStatements);
-            } else {
-                $qb->andWhere($qb->expr()->$_expFn($field, ':'. $searchKey ));
-                if ( self::NULL_VALUE !== $_value ) {
-                   $qb->setParameter( $searchKey , $_value);
+            foreach ($whereFilters[ $searchKey ] as $index => $criteria) {
+                $_searchKey = sprintf('%s_i%d', $searchKey, $index);
+                $_expFn = $criteria['_expFn'];
+                $_value = $criteria['value'];
+                if ( !in_array($_expFn, ['in','notIn']) && is_array($_value) ) {
+                    $i = 0;
+                    $orStatements = $qb->expr()->orX();
+                    foreach ( $_value as $pattern ) {
+                        $parameter = sprintf('%s_%d', $_searchKey, $i++);
+                        $orStatements->add(
+                            $qb
+                              ->setParameter($parameter , $pattern)
+                              ->expr()->$_expFn($field, ':'. $parameter )
+                        );
+                    }
+                    $qb->andWhere($orStatements);
+                } else {
+                    $qb->andWhere($qb->expr()->$_expFn($field, ':'. $_searchKey ));
+                    if ( self::NULL_VALUE !== $_value ) {
+                       $qb->setParameter($_searchKey , $_value);
+                    }
                 }
             }
+            
         }
         
         //.. AND (field1 ... OR field2 ...)
@@ -226,29 +234,30 @@ class SearchHelper
             
             $ANDorStatements = $ANDorStatements ?? $qb->expr()->orX();
             
-            $_expFn = $andORFilters[ $searchKey ]['_expFn'];
-            $_value = $andORFilters[ $searchKey ]['value'];
-            if ( !in_array($_expFn, ['in','notIn']) && is_array($_value) ) {
-                $i = 0;
-                $orStatements = $qb->expr()->orX();
-                foreach ( $_value as $pattern ) {
-                    $_searchKey = sprintf('andor%d_%s_%d', $iteration, $searchKey, $i++);
-                    $orStatements->add(
-                        $qb
-                          ->setParameter( $_searchKey , $pattern)
-                          ->expr()->$_expFn($field, ':'. $_searchKey )
+            foreach ($andORFilters[ $searchKey ] as $index => $criteria) {
+                $_searchKey = sprintf('andor%d_%s_i%d', $iteration, $searchKey, $index);
+                $_expFn = $criteria['_expFn'];
+                $_value = $criteria['value'];
+                if ( !in_array($_expFn, ['in','notIn']) && is_array($_value) ) {
+                    $i = 0;
+                    $orStatements = $qb->expr()->orX();
+                    foreach ( $_value as $pattern ) {
+                        $parameter = sprintf('%s_%d', $_searchKey, $i++);
+                        $orStatements->add(
+                            $qb
+                              ->setParameter($parameter , $pattern)
+                              ->expr()->$_expFn($field, ':'. $parameter )
+                        );
+                    }
+                    $ANDorStatements->add($orStatements);
+                } else {
+                    $ANDorStatements->add(
+                        $qb->expr()->$_expFn($field, ':'. $_searchKey )
                     );
-                }
-                $ANDorStatements->add($orStatements);
-            } else {
-                $_searchKey = sprintf('andor%d_%s', $iteration, $searchKey);
-                $ANDorStatements->add(
-                    $qb
-                      ->expr()->$_expFn($field, ':'. $_searchKey )
-                );
-                
-                if ( self::NULL_VALUE !== $_value ) {
-                   $qb->setParameter( $_searchKey , $_value);
+
+                    if ( self::NULL_VALUE !== $_value ) {
+                       $qb->setParameter($_searchKey , $_value);
+                    }
                 }
             }
         }
@@ -265,29 +274,30 @@ class SearchHelper
             
             $ORStatements = $ORStatements ?? $qb->expr()->andX();
             
-            $_expFn = $orFilters[ $searchKey ]['_expFn'];
-            $_value = $orFilters[ $searchKey ]['value'];
-            if ( !in_array($_expFn, ['in','notIn']) && is_array($_value) ) {
-                $i = 0;
-                $orStatements = $qb->expr()->orX();
-                foreach ( $_value as $pattern ) {
-                    $_searchKey = sprintf('or%d_%s_%d', $iteration, $searchKey, $i++);
-                    $orStatements->add(
-                        $qb
-                          ->setParameter( $_searchKey , $pattern)
-                          ->expr()->$_expFn($field, ':'. $_searchKey )
+            foreach ($orFilters[ $searchKey ] as $index => $criteria) {
+                $_searchKey = sprintf('or%d_%s_i%d', $iteration, $searchKey, $index);
+                $_expFn = $criteria['_expFn'];
+                $_value = $criteria['value'];
+                if ( !in_array($_expFn, ['in','notIn']) && is_array($_value) ) {
+                    $i = 0;
+                    $orStatements = $qb->expr()->orX();
+                    foreach ( $_value as $pattern ) {
+                        $parameter = sprintf('%s_%d', $_searchKey, $i++);
+                        $orStatements->add(
+                            $qb
+                              ->setParameter($parameter, $pattern)
+                              ->expr()->$_expFn($field, ':'. $parameter )
+                        );
+                    }
+                    $ORStatements->add($orStatements);
+                } else {
+                    $ORStatements->add(
+                        $qb->expr()->$_expFn($field, ':'. $_searchKey )
                     );
-                }
-                $ORStatements->add($orStatements);
-            } else {
-                $_searchKey = sprintf('or%d_%s', $iteration, $searchKey);
-                $ORStatements->add(
-                    $qb
-                      ->expr()->$_expFn($field, ':'. $_searchKey )
-                );
-                
-                if ( self::NULL_VALUE !== $_value ) {
-                   $qb->setParameter( $_searchKey , $orFilters[ $searchKey ]['value']);
+
+                    if ( self::NULL_VALUE !== $_value ) {
+                       $qb->setParameter($_searchKey , $_value);
+                    }
                 }
             }
         }
@@ -319,28 +329,31 @@ class SearchHelper
                 continue;
             }
             
-            $_expFn = $whereFilters[ $searchKey ]['_expFn'];
-            $_value = $whereFilters[ $searchKey ]['value'];
-            if ( is_array($_value) ) {
-                $i = 0;
-                $orStatements = $qb->expr()->or();
-                foreach ( $_value as $pattern ) {
-                    $_searchKey = sprintf('%s_%d',$searchKey,$i++);
-                    $orStatements->add(
-                        $qb
-                          ->setParameter( $_searchKey , $pattern)
-                          ->expr()->$_expFn($field, ':'. $_searchKey )
-                    );
-                }
-                $qb->andWhere($orStatements);
-            } else {
-                $qb->andWhere($qb->expr()->$_expFn($field, ':'. $searchKey ));
-                if ( self::NULL_VALUE !== $_value ) {
-                    $_typeValue = null;
-                    if ( is_array($_value) ) {
-                        $_typeValue = is_int( $_value[0] ) ? Connection::PARAM_INT_ARRAY : Connection::PARAM_STR_ARRAY;
+            foreach ($whereFilters[ $searchKey ] as $index => $criteria) {
+                $_searchKey = sprintf('%s_i%d', $searchKey, $index);
+                $_expFn = $criteria['_expFn'];
+                $_value = $criteria['value'];
+                if ( !in_array($_expFn, ['in','notIn']) && is_array($_value) ) {
+                    $i = 0;
+                    $orStatements = $qb->expr()->or();
+                    foreach ( $_value as $pattern ) {
+                        $parameter = sprintf('%s_%d', $_searchKey, $i++);
+                        $orStatements->add(
+                            $qb
+                              ->setParameter($parameter, $pattern)
+                              ->expr()->$_expFn($field, ':'. $parameter )
+                        );
                     }
-                    $qb->setParameter( $searchKey , $_value, $_typeValue);
+                    $qb->andWhere($orStatements);
+                } else {
+                    $qb->andWhere($qb->expr()->$_expFn($field, ':'. $searchKey ));
+                    if ( self::NULL_VALUE !== $_value ) {
+                        $_typeValue = null;
+                        if ( is_array($_value) ) {
+                            $_typeValue = is_int( $_value[0] ) ? Connection::PARAM_INT_ARRAY : Connection::PARAM_STR_ARRAY;
+                        }
+                        $qb->setParameter($searchKey , $_value, $_typeValue);
+                    }
                 }
             }
         }

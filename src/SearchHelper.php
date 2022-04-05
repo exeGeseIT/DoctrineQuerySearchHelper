@@ -3,6 +3,7 @@
 namespace ExeGeseIT\DoctrineQuerySearchHelper;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Doctrine\DBAL\Query\QueryBuilder as QueryBuilderDBAL;
 use Doctrine\ORM\Query\Expr\Andx;
 use Doctrine\ORM\Query\Expr\Orx;
@@ -51,7 +52,7 @@ class SearchHelper
         foreach ( $search as $ckey => $value ) {
             
             $matches = null;
-            preg_match('/(?P<filter>[^[:alnum:]]+)?(?P<key>[[:alnum:]].*)/i', $ckey, $matches);
+            preg_match('/(?P<filter>[^[:alnum:]]+)?(?P<key>[[:alnum:]][^~]*)/i', $ckey, $matches);
 
             $filter = SearchFilter::normalize($matches['filter']);
             $key = $matches['key'];
@@ -357,8 +358,118 @@ class SearchHelper
                 }
             }
         }
+        
+        //.. AND (field1 ... OR field2 ...)
+        if ( array_key_exists(SearchFilter::AND_OR, $whereFilters) )  {
+            $iteration = 0;
+            foreach( $whereFilters[ SearchFilter::AND_OR ] as $andORFilters ) {
+                $iteration++;
+                if( $ANDorStatements = self::getAndOrDBALStatement($qb, $andORFilters, $fields, $iteration) ) {
+                    $qb->andWhere($ANDorStatements);
+                }
+            }
+        }
+        
+        //.. OR (field1 ... AND field2 ...)
+        if ( array_key_exists(SearchFilter::OR, $whereFilters) )  {
+            $iteration = 0;
+            foreach( $whereFilters[ SearchFilter::OR ] as $orFilters ) {
+                $iteration++;
+                if( $ORStatements = self::getOrDBALStatement($qb, $orFilters, $fields, $iteration) ) {
+                    $qb->orWhere($ORStatements);
+                }
+            }
+        }
     }
     
+    private static function getAndOrDBALStatement(QueryBuilderDBAL $qb, iterable $andORFilters, iterable $fields, int $iteration): ?CompositeExpression
+    {
+        $ANDorStatements = null;
+        foreach ($fields as $searchKey => $field) {
+            if ( !isset($andORFilters[ $searchKey ]) ) {
+                continue;
+            }
+            
+            $ANDorStatements = $ANDorStatements ?? $qb->expr()->or();
+            
+            foreach ($andORFilters[ $searchKey ] as $index => $criteria) {
+                $_searchKey = sprintf('andor%d_%s_i%d', $iteration, $searchKey, $index);
+                $_expFn = $criteria['_expFn'];
+                $_value = $criteria['value'];
+                if ( !in_array($_expFn, ['in','notIn']) && is_array($_value) ) {
+                    $i = 0;
+                    $orStatements = $qb->expr()->or();
+                    foreach ( $_value as $pattern ) {
+                        $parameter = sprintf('%s_%d', $_searchKey, $i++);
+                        $orStatements->add(
+                            $qb
+                              ->setParameter($parameter, $pattern)
+                              ->expr()->$_expFn($field, ':'. $parameter )
+                        );
+                    }
+                    $ANDorStatements->add($orStatements);
+                
+                } else {
+                    $ANDorStatements->add(
+                        $qb->expr()->$_expFn($field, ':'. $_searchKey )
+                    );
+
+                    if ( self::NULL_VALUE !== $_value ) {
+                        $_typeValue = null;
+                        if ( is_array($_value) ) {
+                            $_typeValue = is_int( $_value[0] ) ? Connection::PARAM_INT_ARRAY : Connection::PARAM_STR_ARRAY;
+                        }
+                        $qb->setParameter($_searchKey , $_value, $_typeValue);
+                    }
+                }    
+            }
+        }
+        return $ANDorStatements;
+    }
+    
+    private static function getOrDBALStatement(QueryBuilderDBAL $qb, iterable $orFilters, iterable $fields, int $iteration): ?CompositeExpression
+    {
+        $ORStatements = null;
+        foreach ($fields as $searchKey => $field) {
+            if ( !isset($orFilters[ $searchKey ]) ) {
+                continue;
+            }
+            
+            $ORStatements = $ORStatements ?? $qb->expr()->and();
+            
+            foreach ($orFilters[ $searchKey ] as $index => $criteria) {
+                $_searchKey = sprintf('or%d_%s_i%d', $iteration, $searchKey, $index);
+                $_expFn = $criteria['_expFn'];
+                $_value = $criteria['value'];
+                if ( !in_array($_expFn, ['in','notIn']) && is_array($_value) ) {
+                    $i = 0;
+                    $orStatements = $qb->expr()->or();
+                    foreach ( $_value as $pattern ) {
+                        $parameter = sprintf('%s_%d', $_searchKey, $i++);
+                        $orStatements->add(
+                            $qb
+                              ->setParameter($parameter, $pattern)
+                              ->expr()->$_expFn($field, ':'. $parameter )
+                        );
+                    }
+                    $ORStatements->add($orStatements);
+                } else {
+                    $ORStatements->add(
+                        $qb->expr()->$_expFn($field, ':'. $_searchKey )
+                    );
+
+                    if ( self::NULL_VALUE !== $_value ) {
+                        $_typeValue = null;
+                        if ( is_array($_value) ) {
+                            $_typeValue = is_int( $_value[0] ) ? Connection::PARAM_INT_ARRAY : Connection::PARAM_STR_ARRAY;
+                        }
+                        $qb->setParameter($_searchKey , $_value, $_typeValue);
+                    }
+                }
+            }
+        }
+        return $ORStatements;
+    }
 
     public static function initializeQbPaginatorOrderbyDBAL(QueryBuilderDBAL $qb, string $paginatorSort )
     {

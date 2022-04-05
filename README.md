@@ -1,4 +1,5 @@
 
+
 # DoctrineQuerySearchHelper
 
 This package aims to facilitate the creation of dynamic WHERE clauses
@@ -6,7 +7,7 @@ when using ***Doctrine\ORM\Querybuilder*** or ***Doctrine\DBAL\Querybuilder***
 
 He provides :
 - a Querybuilder helper *( ExeGeseIT\DoctrineQuerySearchHelper\QueryClauseBuilder )*
-- some helpers to define search parameters criteria
+- some static helpers to define search parameters criteria *( ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter )*
 
 
 
@@ -19,6 +20,25 @@ Run the following command to install it in your application:
 ```console
 $ composer require exegeseit/doctrinequerysearch-helper
 ```
+
+
+
+## How it work
+
+First, you need to create a "**fetch**" method in your entity's repository.
+*Next example shows you how to achieve this.*
+
+This method has a parameter **$search** which is an <key, value>array where each line will define a condition of the final WHERE clause in the form of:
+
+    [
+      searchKey_condition => condition_value,
+      searchKey_condition => condition_value,
+      ...
+    ]
+
+**SearchFilter** class provide some static helpers to generate $search keys
+
+
 
 ## Usage
 
@@ -63,6 +83,8 @@ class MarketRepository extends ServiceEntityRepository
                 'idfunder' => 'fu.id',
                 'keyfunder' => 'fu.key',
                 'idmanager' => 'u.id',
+                'isprivate' => 'm.isprivate',
+                'amount' => 'm.amount',
             ])
             ->setDefaultLikeFields([
                 'funder' => 'fu.name',
@@ -99,6 +121,11 @@ class SomeController
             SearchFilter::filter('idorganization') => $idorganization,
             SearchFilter::filter('funder') => $funder,
             SearchFilter::equal('manager') => $manager,
+            SearchFilter::equal('isprivate') => false,
+            SearchFilter::or() => [
+                SearchFilter::equal('isprivate') => true,
+                SearchFilter::greaterOrEqual('amount') => 5000,
+            ],
         ];
 
         $markets = $em->getRepository(Market::class)->fetchMarketQb($search)
@@ -112,3 +139,162 @@ class SomeController
 ```
 
 
+## SearchFilter helpers
+
+```php
+/**
+ * isset($value)  ? => ...WHERE {{ searchKey = $value }}
+ * !isset($value) ? => ...WHERE {{ 1 }}
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::filter(string $searchKey, bool $tokenize = true)
+```
+
+
+```php
+/**
+ * ...WHERE 1
+ *    {{ AND searchKey = $value }}
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::equal(string $searchKey, bool $tokenize = true): string
+```
+
+```php
+/**
+ * ...WHERE 1
+ *    {{ AND searchKey <> $value }}
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::notEqual(string $searchKey, bool $tokenize = true): string
+```
+
+```php
+/**
+ * ...WHERE 1
+ *    {{ AND searchKey LIKE $value }}
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::like(string $searchKey, bool $tokenize = true): string
+```
+
+```php
+/**
+ * ...WHERE 1
+ *    {{ AND searchKey NOT LIKE $value
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::notLike(string $searchKey, bool $tokenize = true): string
+```
+
+```php
+/**
+ * ...WHERE 1
+ *    {{ AND searchKey IS NULL
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::null(string $searchKey, bool $tokenize = true): string
+```
+
+```php
+/**
+ * ...WHERE 1
+ *    {{ AND searchKey IS NOT NULL
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::notNull(string $searchKey, bool $tokenize = true): string
+```
+
+```php
+/**
+ * ...WHERE 1
+ *    {{ AND searchKey > $value
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::greater(string $searchKey, bool $tokenize = true): string
+```
+
+```php
+/**
+ * ...WHERE 1
+ *    {{ AND searchKey >= $value
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::greaterOrEqual(string $searchKey, bool $tokenize = true): string
+```
+
+```php
+/**
+ * ...WHERE 1
+ *    {{ AND searchKey < $value
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::lower(string $searchKey, bool $tokenize = true): string
+```
+
+```php
+/**
+ * ...WHERE 1
+ *    {{ AND searchKey <= $value }}
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::lowerOrEqual(string $searchKey, bool $tokenize = true): string
+```
+
+
+SearchFilter also provide two Composition helper:
+
+
+```php
+/**
+ * ...WHERE 1
+ *    {{ AND ( .. OR .. OR ..) }}
+ * 
+ * @return string
+ */
+SearchFilter::andOr(): string
+```
+
+
+```php
+/**
+ * ...WHERE 1
+ *    {{ OR ( .. AND .. AND ..) }}
+ * 
+ * @return string
+ */
+SearchFilter::or(): string
+```    

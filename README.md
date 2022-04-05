@@ -1,13 +1,16 @@
 
 
+
+
 # DoctrineQuerySearchHelper
 
 This package aims to facilitate the creation of dynamic WHERE clauses
 when using ***Doctrine\ORM\Querybuilder*** or ***Doctrine\DBAL\Querybuilder***
 
-He provides :
-- a Querybuilder helper *( ExeGeseIT\DoctrineQuerySearchHelper\QueryClauseBuilder )*
-- some static helpers to define search parameters criteria *( ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter )*
+It rely on:
+- ***QueryClauseBuilder***, a Querybuilder helper in charge of creating the final WHERE clause, based on an array of *$search* conditions
+- ***SearchFilter***, a complete set of static helpers to define the ***$search*** conditions array 
+
 
 
 
@@ -23,24 +26,33 @@ $ composer require exegeseit/doctrinequerysearch-helper
 
 
 
-## How it work
 
-First, you need to create a "**fetch**" method in your entity's repository.
-*Next example shows you how to achieve this.*
+## How it works / Basic usage
 
-This method has a parameter **$search** which is an <key, value>array where each line will define a condition of the final WHERE clause in the form of:
+The basic use of this package is to create a "**fetchQb**" method in your entity's repository.
+This method will receive our ***$search*** condition array as a parameter and return a fully defined Querybuilder instance (SELECT statement + WHERE statement).
 
-    [
-      searchKey_condition => condition_value,
-      searchKey_condition => condition_value,
-      ...
-    ]
 
-**SearchFilter** class provide some static helpers to generate $search keys
+Internally, an instance of ***QueryClauseBuilder*** is used to define allowed search keys and their mapping to properties of entities involved in defining the SELECT statement part of the returned QueryBuilder instance.
+
+*The following example shows how to achieve this.*
+
+The **$search** parameter, on the other hand, is an associative array where each line defines one of the conditions of the final WHERE clause in the form:
+
+    searchKey_filter => searchKey_value
+
+> The *searchKey_filter* key is generated using the appropriate **SearchFilter** helper
+> as described later in the "SearchFilter Wizards" section
 
 
 
 ## Usage
+
+
+>  Take a look at the ***fetchMarketQb*** method which creates a *QueryBuilder* to fetch "Market" objects.
+>  In particular, see how the different "search keys" are declared, which will allow you to filter the results. 
+>  It also defines an *default* ORDER BY clause
+
 
 ```php
 // src/Repository/MarketRepository.php
@@ -60,6 +72,10 @@ class MarketRepository extends ServiceEntityRepository
 
     public function fetchMarketQb(array $search = [], string $paginatorSort = '')
     {
+		    
+        /**
+         * Get a QueryBuilder instance and define his SELECT statement
+         */ 
         $qb = $this->createQueryBuilder('m')
                 ->innerJoin('m.organization', 'o')
                     ->addSelect('o')
@@ -71,10 +87,16 @@ class MarketRepository extends ServiceEntityRepository
                     ->addSelect('u')
                 ;
 
-        $qb->addOrderBy('m.name');
+        $qb->addOrderBy('m.name'); 
 
+        /** 
+         * Now, use $qb to  get an intance of QueryClauseBuilder 
+         */
         $clauseBuilder = QueryClauseBuilder::getInstance($qb);
         $clauseBuilder
+            /** 
+             * First, we define valid searchKeys and their Entity property mapping
+             */
             ->setSearchFields([
                 'idmarket' => 'm.id',
                 'keymarket' => 'm.key',                
@@ -86,6 +108,14 @@ class MarketRepository extends ServiceEntityRepository
                 'isprivate' => 'm.isprivate',
                 'amount' => 'm.amount',
             ])
+            /** 
+             * We can also define "special" searchKeys.
+             * If they appear in the $search array without any filter,
+             * a LIKE filter is implicitly applied
+             * In other words (in this example) these two definitions are equivalent:
+             *    $search[ SearchFilter::filter('manager') ] = 'Peter';
+             *    $search[ SearchFilter::like('manager') ] = 'Peter';
+             */
             ->setDefaultLikeFields([
                 'funder' => 'fu.name',
                 'organization' => 'o.name',
@@ -93,17 +123,20 @@ class MarketRepository extends ServiceEntityRepository
                 'manager' => "CONCAT(u.firstname, ' ', u.lastname)",
             ])
             ;
-        
+
+        /** 
+         * Finally, the WHERE clause of our QueryBuilder is calculated
+         * and our "fully defined" QueryBuilder instance is returned. 
+         */
         return $clauseBuilder->getQueryBuilder($search, $paginatorSort);
     }
 }
 ```
 
->  Take a look at the ***fetchMarketQb*** method which creates a *QueryBuilder* to fetch "Market" objects.
->  In particular, see how the different "search keys" are declared, which will allow you to filter the results. 
+
+
+>  Now, we can use our repository method to get a filtered list of Market.
 >  It also defines an *default* ORDER BY clause
-
-
 
 ```php
 // src/Controller/SomeController.php
@@ -116,7 +149,7 @@ class SomeController
 {
     public function index(EntityManagerInterface $em)
     {
-	// ...
+	// Markets filtering conditions
         $search = [
             SearchFilter::filter('idorganization') => $idorganization,
             SearchFilter::filter('funder') => $funder,
@@ -139,7 +172,7 @@ class SomeController
 ```
 
 
-## SearchFilter helpers
+## SearchFilter Wizards
 
 ```php
 /**

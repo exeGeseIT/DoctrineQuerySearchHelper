@@ -43,7 +43,7 @@ class QueryClauseBuilder
     
     /**
      * 
-     * @param iterable $searchFields    [searchKey => field]
+     * @param iterable $searchFields [searchKey => field]
      * @return self
      */
     public function setSearchFields(iterable $searchFields): self
@@ -55,8 +55,12 @@ class QueryClauseBuilder
     }
     
     /**
+     * If these searchKey appear in the $search array without any filter a LIKE filter is implicitly applied.
+     * In other words, for such a searchKey, these two definitions are equivalent:
+     *    SearchFilter::filter('default_like_searchkey') => 'foo',
+     *    SearchFilter::like('default_like_searchkey') => 'foo',
      * 
-     * @param iterable $likeFields    [searchKey => field]
+     * @param iterable $likeFields [searchKey => field]
      * @return self
      */
     public function setDefaultLikeFields(iterable $likeFields): self

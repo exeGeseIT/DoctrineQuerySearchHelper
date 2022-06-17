@@ -59,7 +59,7 @@ class SearchFilter
      */
     public static function decodeSearchfilter(string $searchfilter): array
     {
-        $matches = null;
+        $matches = [];
         preg_match('/(?P<filter>[^[:alnum:]]+)?(?P<key>[[:alnum:]][^~]*)/i', $searchfilter, $matches);
         return [
             'key' => $matches['key'] ?? '',
@@ -75,9 +75,21 @@ class SearchFilter
      */
     public static function hasFilteredKey(string $searchKey, array $searchParameters): bool
     {
+        return null !== self::getFilteredKey($searchKey, $searchParameters);
+    }
+    
+    /**
+     * 
+     * @param string $searchKey
+     * @param array $searchParameters
+     * @return string|null null if $searchKey wasn't filtered
+     */
+    public static function getFilteredKey(string $searchKey, array $searchParameters): ?string
+    {
         $hash = sprintf(':%s', implode(':', array_keys($searchParameters)));
-        $pattern = '/[^[:alnum:]]' . $searchKey .'~/i';
-        return (bool) preg_match($pattern, $hash);
+        $pattern = '/[^[:alnum:]](?P<key>' . $searchKey .')~/i';
+        preg_match($pattern, $hash, $matches);
+        return $matches['key'] ?? null;
     }
     
     

@@ -67,6 +67,19 @@ class SearchFilter
         ];
     }
     
+    /**
+     * 
+     * @param string $searchKey
+     * @param array $searchfilters
+     * @return bool
+     */
+    public static function hasFilteredKey(string $searchKey, array $searchParameters): bool
+    {
+        $hash = sprintf(':%s', implode(':', array_keys($searchParameters)));
+        $pattern = '/[^[:alnum:]]' . $searchKey .'~/i';
+        return (bool) preg_match($pattern, $hash);
+    }
+    
     
     /**
      * ...WHERE 1

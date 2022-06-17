@@ -79,17 +79,18 @@ class SearchFilter
     }
     
     /**
+     * Return <filteredkey> searchKey or null
      * 
      * @param string $searchKey
      * @param array $searchParameters
-     * @return string|null null if $searchKey wasn't filtered
+     * @return string|null
      */
     public static function getFilteredKey(string $searchKey, array $searchParameters): ?string
     {
         $hash = sprintf(':%s', implode(':', array_keys($searchParameters)));
-        $pattern = '/[^[:alnum:]](?P<key>' . $searchKey .')~/i';
+        $pattern = '/:(?P<filteredkey>(?:[^[:alnum:]])?' . $searchKey .')~/i';
         preg_match($pattern, $hash, $matches);
-        return $matches['key'] ?? null;
+        return $matches['filteredkey'] ?? null;
     }
     
     

@@ -51,11 +51,10 @@ class SearchHelper
 
         foreach ( $search as $ckey => $value ) {
             
-            $matches = null;
-            preg_match('/(?P<filter>[^[:alnum:]]+)?(?P<key>[[:alnum:]][^~]*)/i', $ckey, $matches);
+            $m = SearchFilter::decodeSearchfilter($ckey);
 
-            $filter = SearchFilter::normalize($matches['filter']);
-            $key = $matches['key'];
+            $key = $m['key'];
+            $filter = SearchFilter::normalize($m['filter']);
 
             $_expFn = null;
             if ( in_array($filter, [SearchFilter::OR, SearchFilter::AND_OR]) && is_iterable($value) ) {

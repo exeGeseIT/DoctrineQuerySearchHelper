@@ -52,6 +52,20 @@ class SearchFilter
         return $_filter;
     }
     
+    /**
+     * 
+     * @param string $searchfilter
+     * @return array ['key' =>, 'filter =>]
+     */
+    public static function decodeSearchfilter(string $searchfilter): array
+    {
+        $matches = null;
+        preg_match('/(?P<filter>[^[:alnum:]]+)?(?P<key>[[:alnum:]][^~]*)/i', $searchfilter, $matches);
+        return [
+            'key' => $matches['key'] ?? '',
+            'filter' => $matches['filter'] ?? '',
+        ];
+    }
     
     
     /**

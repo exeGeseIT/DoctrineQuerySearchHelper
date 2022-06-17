@@ -94,15 +94,22 @@ class QueryClauseBuilder
             return [];
         }
         
-        foreach ($this->defaultLike as $key) {
-            if ( array_key_exists($key, $search) ) {
-                $value = $search[ $key ];
-                $search[ '%' . $key ] = ctype_print($value) ? trim($value) : $value;
-                unset($search[$key]);
+        if ( empty($this->defaultLike) ) {
+            return $search;
+        }
+        
+        $_search = [];
+        foreach ($search as $searchfilter => $value) {
+            
+            $m = SearchFilter::decodeSearchfilter($searchfilter);
+            if ( empty($m['filter']) && in_array($m['key'], $this->defaultLike) ) {
+                $_search[ SearchFilter::like($m['key']) ] = ctype_print($value) ? trim($value) : $value;
+            } else {
+                $_search[ $searchfilter ] = $value;
             }
         }
         
-        return $search;
+        return $_search;
     }
             
 }

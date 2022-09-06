@@ -1,0 +1,7 @@
+ parameters:
+    level: 6
+    tmpDir: tmp/phpstan
+    #reportUnmatchedIgnoredErrors: false
+    #checkGenericClassInNonGenericObjectType: false
+    paths:
+        - src

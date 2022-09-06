@@ -1,3 +1,5 @@
 /vendor/
 /nbproject/
+/tmp/
 /composer.lock
+/.php-version

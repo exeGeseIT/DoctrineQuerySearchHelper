@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "php": "^7.4 | ^8.0.2",
+        "php": "^8.0.2",
         "doctrine/orm": "^2.9 | ^3.0",
         "symfony/polyfill-ctype": "^1.0",
         "symfony/polyfill-mbstring": "^1.0"
@@ -25,5 +25,10 @@
         "psr-4": {
             "ExeGeseIT\\DoctrineQuerySearchHelper\\": "src/"
         }
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.8",
+        "rector/rector": "^0.14.2",
+        "symplify/easy-coding-standard": "^11.1"
     }
 }

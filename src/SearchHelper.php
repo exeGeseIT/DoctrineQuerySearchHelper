@@ -2,7 +2,6 @@
 
 namespace ExeGeseIT\DoctrineQuerySearchHelper;
 
-use function ctype_print;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Doctrine\DBAL\Query\QueryBuilder as QueryBuilderDBAL;
@@ -17,6 +16,7 @@ use function mb_strtolower;
  * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
  *
  * @phpstan-type TSearchvalue  array<int|string>|bool|int|string
+ * @phpstan-type TSearch       array<string, TSearchvalue|array<string, TSearchvalue>>
  * @phpstan-type TWhere        array{'expFn': string, 'value': TSearchvalue}
  */
 class SearchHelper
@@ -40,7 +40,7 @@ class SearchHelper
     }
 
     /**
-     * @param array<string, TSearchvalue|array<string, TSearchvalue>> $search
+     * @param TSearch $search
      * @param array<string, string> $fields
      */
     public static function setQbSearchClause(QueryBuilder|QueryBuilderDBAL $qb, array $search, array $fields = []): void
@@ -65,7 +65,10 @@ class SearchHelper
     {
         if (!empty($paginatorSort)) {
             $_initial_order = $qb->getDQLPart('orderBy');
+            $_initial_order = is_iterable($_initial_order) ? $_initial_order : [$_initial_order];
             $qb->add('orderBy', str_replace('+', ',', $paginatorSort));
+
+            /** @var \Doctrine\ORM\Query\Expr\OrderBy|string $sort */
             foreach ($_initial_order as $sort) {
                 $qb->addOrderBy($sort);
             }
@@ -162,7 +165,10 @@ class SearchHelper
     {
         if (!empty($paginatorSort)) {
             $_initial_order = $qb->getQueryPart('orderBy');
+            $_initial_order = is_iterable($_initial_order) ? $_initial_order : [$_initial_order];
             $qb->add('orderBy', str_replace('+', ',', $paginatorSort));
+
+            /** @var string $sort */
             foreach ($_initial_order as $sort) {
                 $qb->addOrderBy($sort);
             }
@@ -170,7 +176,7 @@ class SearchHelper
     }
 
     /**
-     * @param array<string, TSearchvalue|array<string, TSearchvalue>> $search
+     * @param TSearch $search
      * @return array<string, TWhere[]|array<string, TWhere[]>>
      */
     private static function parseSearchParameters(array $search): array
@@ -426,7 +432,7 @@ class SearchHelper
                 continue;
             }
 
-            $ANDorStatements ??= $qb->expr()->or();
+            $ANDorStatements ??= $qb->expr()->or('1=0');
 
             foreach ($andORFilters[$searchKey] as $index => $criteria) {
                 $_searchKey = sprintf('andor%d_%s_i%d', $iteration, $searchKey, $index);
@@ -483,7 +489,7 @@ class SearchHelper
                 continue;
             }
 
-            $ORStatements ??= $qb->expr()->and();
+            $ORStatements ??= $qb->expr()->and('1=1');
 
             foreach ($orFilters[$searchKey] as $index => $criteria) {
                 $_searchKey = sprintf('or%d_%s_i%d', $iteration, $searchKey, $index);

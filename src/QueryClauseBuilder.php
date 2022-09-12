@@ -10,7 +10,7 @@ use Doctrine\ORM\QueryBuilder;
  *
  * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
  *
- * @phpstan-import-type TSearchvalue from SearchHelper
+ * @phpstan-import-type TSearch from SearchHelper
  */
 class QueryClauseBuilder
 {
@@ -69,8 +69,7 @@ class QueryClauseBuilder
     }
 
     /**
-     * @ template TSearchvalue of array<int|string>|bool|int|string
-     * @param array<string, TSearchvalue|array<string, TSearchvalue>>|null $search
+     * @param TSearch|null $search
      */
     public function getQueryBuilder(?array $search, ?string $paginatorSort): QueryBuilder|QueryBuilderDBAL
     {
@@ -83,9 +82,8 @@ class QueryClauseBuilder
     }
 
     /**
-     * @ template TSearchvalue of array<int|string>|bool|int|string
-     * @param array<string, TSearchvalue|array<string, TSearchvalue>>|null $search
-     * @return array<string, TSearchvalue|array<string, TSearchvalue>>
+     * @param TSearch|null $search
+     * @return TSearch
      */
     private function getSearchFilters(?array $search): array
     {

@@ -8,7 +8,6 @@ use Doctrine\DBAL\Query\QueryBuilder as QueryBuilderDBAL;
 use Doctrine\ORM\Query\Expr\Andx;
 use Doctrine\ORM\Query\Expr\Orx;
 use Doctrine\ORM\QueryBuilder;
-use function mb_strtolower;
 
 /**
  * Description of SearchHelper
@@ -27,13 +26,13 @@ class SearchHelper
      * @param array<string|int>|string|int $searched
      * @return string|string[]
      */
-    public static function sqlSearchString(string|int|array $searched): string|array
+    public static function sqlSearchString(string|int|array $searched, bool $strict = false): string|array
     {
         $_s = [];
         $stack = is_iterable($searched) ? $searched : [$searched];
         foreach ($stack as $searchedValue) {
-            //$_s[] = ctype_print($searchedValue) ? '%' . str_replace(['%', '_'], ['\%', '\_'], trim(mb_strtolower((string)$searchedValue))) . '%' : $searchedValue;
-            $_s[] = '%' . str_replace(['%', '_'], ['\%', '\_'], trim(\mb_strtolower((string) $searchedValue))) . '%';
+            $_value = trim(\mb_strtolower((string) $searchedValue));
+            $_s[] = $strict ? $_value : '%' . str_replace(['%', '_'], ['\%', '\_'], $_value) . '%';
         }
 
         return is_iterable($searched) ? $_s : $_s[0];
@@ -229,6 +228,16 @@ class SearchHelper
                     case SearchFilter::NOT_LIKE:
                         $expFn = 'notLike';
                         $value = self::sqlSearchString($value);
+                        break;
+
+                    case SearchFilter::LIKE_STRICK:
+                        $expFn = 'like';
+                        $value = self::sqlSearchString($value, true);
+                        break;
+
+                    case SearchFilter::NOT_LIKE_STRICK:
+                        $expFn = 'notLike';
+                        $value = self::sqlSearchString($value, true);
                         break;
 
                     default:

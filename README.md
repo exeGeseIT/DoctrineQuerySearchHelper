@@ -237,6 +237,36 @@ SearchFilter::notLike(string $searchKey, bool $tokenize = true): string
 
 ```php
 /**
+ * Differs from SearchFilter::like() in that "$searchKey" is taken as is. 
+ *   i.e.: the characters '%' and '_' are neither appended nor escaped
+ * 
+ * ...WHERE 1
+ *    {{ AND searchKey LIKE $value }}
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::likeStrict(string $searchKey, bool $tokenize = true): string
+```
+
+```php
+/**
+ * Differs from SearchFilter::notLike() in that "$searchKey" is taken as is. 
+ *   i.e.: the characters '%' and '_' are neither appended nor escaped
+ * 
+ * ...WHERE 1
+ *    {{ AND searchKey NOT LIKE $value
+ * 
+ * @param string $searchKey
+ * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness
+ * @return string
+ */
+SearchFilter::notLikeStrict(string $searchKey, bool $tokenize = true): string
+```
+
+```php
+/**
  * ...WHERE 1
  *    {{ AND searchKey IS NULL
  * 

@@ -13,6 +13,8 @@ class SearchFilter
     public const NOT_EQUAL = '!';
     public const LIKE = '%';
     public const NOT_LIKE = '!%';
+    public const LIKE_STRICK = '%=';
+    public const NOT_LIKE_STRICK = '!%=';
     public const NULL = '_';
     public const NOT_NULL = '!_';
     public const GREATER = '>';
@@ -155,6 +157,34 @@ class SearchFilter
     public static function notLike(string $searchKey, bool $tokenize = true): string
     {
         return self::NOT_LIKE . trim($searchKey) . self::tokenize($tokenize);
+    }
+
+    /**
+     * Differs from SearchFilter::like() in that "$searchKey" is taken as is.
+     *   i.e.: the characters '%' and '_' are neither appended nor escaped
+     *
+     * ...WHERE 1
+     *    {{ AND searchKey LIKE $value }}
+     *
+     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     */
+    public static function likeStrict(string $searchKey, bool $tokenize = true): string
+    {
+        return self::LIKE_STRICK . trim($searchKey) . self::tokenize($tokenize);
+    }
+
+    /**
+     * Differs from SearchFilter::notLike() in that "$searchKey" is taken as is.
+     *   i.e.: the characters '%' and '_' are neither appended nor escaped
+     *
+     * ...WHERE 1
+     *    {{ AND searchKey NOT LIKE $value
+     *
+     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     */
+    public static function notLikeStrict(string $searchKey, bool $tokenize = true): string
+    {
+        return self::NOT_LIKE_STRICK . trim($searchKey) . self::tokenize($tokenize);
     }
 
     /**

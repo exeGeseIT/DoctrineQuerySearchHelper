@@ -91,7 +91,7 @@ class QueryClauseBuilder
             return [];
         }
 
-        if (empty($this->defaultLike)) {
+        if ([] === $this->defaultLike) {
             return $search;
         }
 

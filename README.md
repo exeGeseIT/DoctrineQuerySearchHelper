@@ -16,7 +16,7 @@ It rely on:
 
 ## Installation
 
-> DoctrineQuerySearchHelper require at least PHP 7.4 
+> DoctrineQuerySearchHelper require at least PHP 8.1 
 
 Run the following command to install it in your application:
 

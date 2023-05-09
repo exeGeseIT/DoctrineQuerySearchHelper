@@ -139,7 +139,7 @@ class SearchHelper
             foreach ($whereFilters[SearchFilter::AND_OR] as $andORFilters) {
                 $iteration++;
 
-                if (($ANDorStatements = self::getAndOrDBALStatement($qb, $andORFilters, $fields, $iteration)) !== null) {
+                if (($ANDorStatements = self::getAndOrDBALStatement($qb, $andORFilters, $fields, $iteration)) instanceof \Doctrine\DBAL\Query\Expression\CompositeExpression) {
                     $qb->andWhere($ANDorStatements);
                 }
             }
@@ -153,7 +153,7 @@ class SearchHelper
             foreach ($whereFilters[SearchFilter::OR] as $orFilters) {
                 $iteration++;
 
-                if (($ORStatements = self::getOrDBALStatement($qb, $orFilters, $fields, $iteration)) !== null) {
+                if (($ORStatements = self::getOrDBALStatement($qb, $orFilters, $fields, $iteration)) instanceof \Doctrine\DBAL\Query\Expression\CompositeExpression) {
                     $qb->orWhere($ORStatements);
                 }
             }
@@ -316,7 +316,7 @@ class SearchHelper
             foreach ($whereFilters[SearchFilter::AND_OR] as $andORFilters) {
                 $iteration++;
 
-                if (($ANDorStatements = self::getAndOrDQLStatement($qb, $andORFilters, $fields, $iteration)) !== null) {
+                if (($ANDorStatements = self::getAndOrDQLStatement($qb, $andORFilters, $fields, $iteration)) instanceof \Doctrine\ORM\Query\Expr\Orx) {
                     $qb->andWhere($ANDorStatements);
                 }
             }
@@ -330,7 +330,7 @@ class SearchHelper
             foreach ($whereFilters[SearchFilter::OR] as $orFilters) {
                 $iteration++;
 
-                if (($ORStatements = self::getOrDQLStatement($qb, $orFilters, $fields, $iteration)) !== null) {
+                if (($ORStatements = self::getOrDQLStatement($qb, $orFilters, $fields, $iteration)) instanceof \Doctrine\ORM\Query\Expr\Andx) {
                     $qb->orWhere($ORStatements);
                 }
             }

@@ -9,20 +9,20 @@ namespace ExeGeseIT\DoctrineQuerySearchHelper;
  */
 class SearchFilter
 {
-    public const EQUAL = '=';
-    public const NOT_EQUAL = '!';
-    public const LIKE = '%';
-    public const NOT_LIKE = '!%';
-    public const LIKE_STRICK = '%=';
-    public const NOT_LIKE_STRICK = '!%=';
-    public const NULL = '_';
-    public const NOT_NULL = '!_';
-    public const GREATER = '>';
-    public const GREATER_OR_EQUAL = '>=';
-    public const LOWER = '<';
-    public const LOWER_OR_EQUAL = '<=';
-    public const OR = '|';
-    public const AND_OR = '&|';
+    final public const EQUAL = '=';
+    final public const NOT_EQUAL = '!';
+    final public const LIKE = '%';
+    final public const NOT_LIKE = '!%';
+    final public const LIKE_STRICK = '%=';
+    final public const NOT_LIKE_STRICK = '!%=';
+    final public const NULL = '_';
+    final public const NOT_NULL = '!_';
+    final public const GREATER = '>';
+    final public const GREATER_OR_EQUAL = '>=';
+    final public const LOWER = '<';
+    final public const LOWER_OR_EQUAL = '<=';
+    final public const OR = '|';
+    final public const AND_OR = '&|';
 
     public static function normalize(string $filter): string
     {

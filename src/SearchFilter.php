@@ -3,25 +3,36 @@
 namespace ExeGeseIT\DoctrineQuerySearchHelper;
 
 /**
- * Description of SearchFilter
- *
  * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
  */
 class SearchFilter
 {
     final public const EQUAL = '=';
+
     final public const NOT_EQUAL = '!';
+
     final public const LIKE = '%';
+
     final public const NOT_LIKE = '!%';
+
     final public const LIKE_STRICK = '%=';
+
     final public const NOT_LIKE_STRICK = '!%=';
+
     final public const NULL = '_';
+
     final public const NOT_NULL = '!_';
+
     final public const GREATER = '>';
+
     final public const GREATER_OR_EQUAL = '>=';
+
     final public const LOWER = '<';
+
     final public const LOWER_OR_EQUAL = '<=';
+
     final public const OR = '|';
+
     final public const AND_OR = '&|';
 
     public static function normalize(string $filter): string
@@ -60,7 +71,7 @@ class SearchFilter
     }
 
     /**
-     * Return <filteredkey> searchKey or null
+     * Return <filteredkey> searchKey or null.
      *
      * @param array<string, array<int|string>|bool|int|string> $searchParameters
      */
@@ -74,21 +85,22 @@ class SearchFilter
     }
 
     /**
-     * Return <searchKey> $searchParameters value or null
+     * Return <searchKey> $searchParameters value or null.
      *
      * @param array<string, array<int|string>|bool|int|string> $searchParameters
+     *
      * @return array<int|string>|bool|int|string|null
      */
     public static function getFilteredKeyValue(string $searchKey, array $searchParameters): string|int|array|bool|null
     {
         $filteredKey = self::getFilteredKey($searchKey, $searchParameters);
 
-        return empty($filteredKey) ? null : $searchParameters[$filteredKey];
+        return null === $filteredKey || '' === $filteredKey || '0' === $filteredKey ? null : $searchParameters[$filteredKey];
     }
 
     /**
      * ...WHERE 1
-     *    {{ AND ( .. OR .. OR ..) }}
+     *    {{ AND ( .. OR .. OR ..) }}.
      */
     public static function andOr(): string
     {
@@ -97,7 +109,7 @@ class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ OR ( .. AND .. AND ..) }}
+     *    {{ OR ( .. AND .. AND ..) }}.
      */
     public static function or(): string
     {
@@ -106,9 +118,9 @@ class SearchFilter
 
     /**
      * isset($value)  ? => ...WHERE {{ searchKey = $value }}
-     * !isset($value) ? => ...WHERE {{ 1 }}
+     * !isset($value) ? => ...WHERE {{ 1 }}.
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function filter(string $searchKey, bool $tokenize = true): string
     {
@@ -117,9 +129,9 @@ class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey = $value }}
+     *    {{ AND searchKey = $value }}.
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function equal(string $searchKey, bool $tokenize = true): string
     {
@@ -128,9 +140,9 @@ class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey <> $value }}
+     *    {{ AND searchKey <> $value }}.
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function notEqual(string $searchKey, bool $tokenize = true): string
     {
@@ -139,9 +151,9 @@ class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey LIKE $value }}
+     *    {{ AND searchKey LIKE $value }}.
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function like(string $searchKey, bool $tokenize = true): string
     {
@@ -150,9 +162,9 @@ class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey NOT LIKE $value
+     *    {{ AND searchKey NOT LIKE $value.
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function notLike(string $searchKey, bool $tokenize = true): string
     {
@@ -161,12 +173,12 @@ class SearchFilter
 
     /**
      * Differs from SearchFilter::like() in that "$searchKey" is taken as is.
-     *   i.e.: the characters '%' and '_' are neither appended nor escaped
+     *   i.e.: the characters '%' and '_' are neither appended nor escaped.
      *
      * ...WHERE 1
      *    {{ AND searchKey LIKE $value }}
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function likeStrict(string $searchKey, bool $tokenize = true): string
     {
@@ -175,12 +187,12 @@ class SearchFilter
 
     /**
      * Differs from SearchFilter::notLike() in that "$searchKey" is taken as is.
-     *   i.e.: the characters '%' and '_' are neither appended nor escaped
+     *   i.e.: the characters '%' and '_' are neither appended nor escaped.
      *
      * ...WHERE 1
      *    {{ AND searchKey NOT LIKE $value
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function notLikeStrict(string $searchKey, bool $tokenize = true): string
     {
@@ -189,9 +201,9 @@ class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey IS NULL
+     *    {{ AND searchKey IS NULL.
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function null(string $searchKey, bool $tokenize = true): string
     {
@@ -200,9 +212,9 @@ class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey IS NOT NULL
+     *    {{ AND searchKey IS NOT NULL.
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function notNull(string $searchKey, bool $tokenize = true): string
     {
@@ -211,9 +223,9 @@ class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey > $value
+     *    {{ AND searchKey > $value.
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function greater(string $searchKey, bool $tokenize = true): string
     {
@@ -222,9 +234,9 @@ class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey >= $value
+     *    {{ AND searchKey >= $value.
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function greaterOrEqual(string $searchKey, bool $tokenize = true): string
     {
@@ -233,9 +245,9 @@ class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey < $value
+     *    {{ AND searchKey < $value.
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function lower(string $searchKey, bool $tokenize = true): string
     {
@@ -244,9 +256,9 @@ class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey <= $value }}
+     *    {{ AND searchKey <= $value }}.
      *
-     * @param bool $tokenize  if TRUE, a random hash is added to the returned string to ensure its uniqueness.
+     * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function lowerOrEqual(string $searchKey, bool $tokenize = true): string
     {

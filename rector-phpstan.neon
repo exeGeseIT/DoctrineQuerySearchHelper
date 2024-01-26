@@ -1,0 +1,7 @@
+# As rectorphp/rector-src#4769 drop automatic PHPStan extension loadin since 
+# we have to "manually" load them 
+includes:
+    - vendor/tomasvotruba/type-coverage/config/extension.neon
+    - vendor/tomasvotruba/cognitive-complexity/config/extension.neon
+
+    - phpstan.neon

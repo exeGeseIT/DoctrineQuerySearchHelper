@@ -31,8 +31,10 @@ class SearchHelper
         $_s = [];
         $stack = is_iterable($searched) ? $searched : [$searched];
         foreach ($stack as $searchedValue) {
-            $_value = trim(\mb_strtolower((string) $searchedValue));
-            $_s[] = $strict ? $_value : '%' . str_replace(['%', '_'], ['\%', '\_'], $_value) . '%';
+            $_s[] = match ($strict) {
+                true => (string) $searchedValue,
+                default => '%' . str_replace(['%', '_'], ['\%', '\_'], trim(\mb_strtolower((string) $searchedValue))) . '%',
+            };
         }
 
         return is_iterable($searched) ? $_s : $_s[0];

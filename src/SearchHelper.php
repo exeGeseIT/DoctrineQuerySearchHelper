@@ -118,7 +118,7 @@ class SearchHelper
 
                     $queryBuilderDBAL->andWhere($orStatements);
                 } else {
-                    $queryBuilderDBAL->andWhere($queryBuilderDBAL->expr()->{$expFn}($field, ':' . $searchKey));
+                    $queryBuilderDBAL->andWhere($queryBuilderDBAL->expr()->{$expFn}($field, ':' . $_searchKey));
 
                     if (self::NULL_VALUE !== $_value) {
                         $_typeValue = null;
@@ -127,7 +127,7 @@ class SearchHelper
                             $_typeValue = is_int($_value[0]) ? Connection::PARAM_INT_ARRAY : Connection::PARAM_STR_ARRAY;
                         }
 
-                        $queryBuilderDBAL->setParameter($searchKey, $_value, $_typeValue);
+                        $queryBuilderDBAL->setParameter($_searchKey, $_value, $_typeValue);
                     }
                 }
             }

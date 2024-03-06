@@ -8,13 +8,12 @@ use PhpCsFixer\Fixer\ControlStructure\YodaStyleFixer;
 use PhpCsFixer\Fixer\Import\NoUnusedImportsFixer;
 use PhpCsFixer\Fixer\Operator\NotOperatorWithSpaceFixer;
 use PhpCsFixer\Fixer\Operator\NotOperatorWithSuccessorSpaceFixer;
-use PhpCsFixer\Fixer\Strict\StrictComparisonFixer;
 use PhpCsFixer\Fixer\Whitespace\BlankLineBeforeStatementFixer;
 use Symplify\EasyCodingStandard\Config\ECSConfig;
 use Symplify\EasyCodingStandard\ValueObject\Set\SetList;
 
 return ECSConfig::configure()
-    ->withCache(directory: './tmp/ecs')
+    ->withCache(directory: __DIR__ . '/tmp/ecs')
     ->withPaths([
         __DIR__ . '/src',
     ])
@@ -22,7 +21,7 @@ return ECSConfig::configure()
     ->withSets([
         SetList::CLEAN_CODE,
     ])
-    ->withPhpCsFixerSets(perCS: true, symfony: true)
+    ->withPhpCsFixerSets(perCS: true, php81Migration: true, symfony: true)
     ->withRules([
         NoUnusedImportsFixer::class,
     ])
@@ -44,16 +43,8 @@ return ECSConfig::configure()
         'statements' => ['if', 'phpdoc', 'return', 'switch', 'throw', 'try'],
     ])
     ->withSkip([
-        //        StrictComparisonFixer::class => [
-        //            __DIR__ . '/src/Helper/SearchData/DatasearchAbstract.php',
-        //        ],
         NotOperatorWithSpaceFixer::class,
         NotOperatorWithSuccessorSpaceFixer::class,
-
-        // PhpCsFixer\Fixer\Strict\StrictParamFixer::class,
-        // PhpCsFixer\Fixer\Strict\DeclareStrictTypesFixer::class,
-        // PhpCsFixer\Fixer\FunctionNotation\NullableTypeDeclarationForDefaultNullValueFixer::class,
-
         AssignmentInConditionSniff::class,
     ])
     ->withRootFiles();

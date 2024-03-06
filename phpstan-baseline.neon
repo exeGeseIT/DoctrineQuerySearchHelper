@@ -1,0 +1,8 @@
+parameters:
+    ignoreErrors:
+        -
+            message: '#^Method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:parseSearchParameters\(\) should return array\<string, array\<array\<array\<array\<int\|string\>\|bool\|int\|string\>\|bool\|int\|string\>\>\> but returns array\<string, array\<int, array\<string, array\<array\<array\<array\<int\|string\>\|bool\|int\|string\>\|bool\|int\|string\>\|bool\|int\|string\>\|bool\|int\|string\>\>\>\.$#'
+            path: src/SearchHelper.php
+        -
+            message: '#^Parameter \#1 \$searched of static method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:sqlSearchString\(\) expects array\<int\|string\>\|int\|string, array\<array\<int\|string\>\|bool\|int\|string\>\|int\<min, \-1\>\|int\<1, max\>\|string\|true given\.$#'
+            path: src/SearchHelper.php

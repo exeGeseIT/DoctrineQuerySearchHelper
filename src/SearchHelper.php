@@ -2,7 +2,7 @@
 
 namespace ExeGeseIT\DoctrineQuerySearchHelper;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Doctrine\DBAL\Query\QueryBuilder as QueryBuilderDBAL;
 use Doctrine\ORM\Query\Expr\Andx;
@@ -124,7 +124,7 @@ class SearchHelper
                         $_typeValue = null;
 
                         if (is_array($_value)) {
-                            $_typeValue = is_int($_value[0]) ? Connection::PARAM_INT_ARRAY : Connection::PARAM_STR_ARRAY;
+                            $_typeValue = is_int($_value[0]) ? ArrayParameterType::INTEGER : ArrayParameterType::STRING;
                         }
 
                         $queryBuilderDBAL->setParameter($_searchKey, $_value, $_typeValue);
@@ -162,6 +162,9 @@ class SearchHelper
         }
     }
 
+    /**
+     * @todo: Need rework to fix Doctrine\DBAL\Query\QueryBuilder->getQueryPart() deprecation
+     */
     public static function initializeQbPaginatorOrderbyDBAL(QueryBuilderDBAL $queryBuilderDBAL, string $paginatorSort): void
     {
         if ('' !== $paginatorSort && '0' !== $paginatorSort) {
@@ -470,9 +473,9 @@ class SearchHelper
                         );
                     }
 
-                    $ANDorStatements->add($orStatements);
+                    $ANDorStatements = $ANDorStatements->with($orStatements);
                 } else {
-                    $ANDorStatements->add(
+                    $ANDorStatements = $ANDorStatements->with(
                         $queryBuilderDBAL->expr()->{$expFn}($field, ':' . $_searchKey)
                     );
 
@@ -480,7 +483,7 @@ class SearchHelper
                         $_typeValue = null;
 
                         if (is_array($_value)) {
-                            $_typeValue = is_int($_value[0]) ? Connection::PARAM_INT_ARRAY : Connection::PARAM_STR_ARRAY;
+                            $_typeValue = is_int($_value[0]) ? ArrayParameterType::INTEGER : ArrayParameterType::STRING;
                         }
 
                         $queryBuilderDBAL->setParameter($_searchKey, $_value, $_typeValue);
@@ -529,9 +532,9 @@ class SearchHelper
                         );
                     }
 
-                    $ORStatements->add($orStatements);
+                    $ORStatements = $ORStatements->with($orStatements);
                 } else {
-                    $ORStatements->add(
+                    $ORStatements = $ORStatements->with(
                         $queryBuilderDBAL->expr()->{$expFn}($field, ':' . $_searchKey)
                     );
 
@@ -539,7 +542,7 @@ class SearchHelper
                         $_typeValue = null;
 
                         if (is_array($_value)) {
-                            $_typeValue = is_int($_value[0]) ? Connection::PARAM_INT_ARRAY : Connection::PARAM_STR_ARRAY;
+                            $_typeValue = is_int($_value[0]) ? ArrayParameterType::INTEGER : ArrayParameterType::STRING;
                         }
 
                         $queryBuilderDBAL->setParameter($_searchKey, $_value, $_typeValue);

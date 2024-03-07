@@ -56,21 +56,29 @@ class SearchHelper
 
     public static function initializeQbPaginatorOrderby(QueryBuilder|QueryBuilderDBAL $qb, ?string $paginatorSort): void
     {
+        $tSorts = self::normalizePaginatorSort($paginatorSort ?? '');
         if ($qb instanceof QueryBuilder) {
-            self::initializeQbPaginatorOrderbyDQL($qb, $paginatorSort ?? '');
+            self::initializeQbPaginatorOrderbyDQL($qb, $tSorts);
         } else {
-            self::initializeQbPaginatorOrderbyDBAL($qb, $paginatorSort ?? '');
+            self::initializeQbPaginatorOrderbyDBAL($qb, $tSorts);
         }
     }
 
-    public static function initializeQbPaginatorOrderbyDQL(QueryBuilder $queryBuilder, string $paginatorSort): void
+    /**
+     * @param array<int, TSort> $tSorts
+     */
+    private static function initializeQbPaginatorOrderbyDQL(QueryBuilder $queryBuilder, array $tSorts): void
     {
-        if ('' !== $paginatorSort) {
+        if ([] !== $tSorts) {
             $_initial_order = $queryBuilder->getDQLPart('orderBy');
             $_initial_order = is_iterable($_initial_order) ? $_initial_order : [$_initial_order];
-            $queryBuilder->add('orderBy', str_replace('+', ',', $paginatorSort));
 
-            /** @var OrderBy|string $sort */
+            $queryBuilder->resetDQLPart('orderBy');
+            foreach ($tSorts as $tSort) {
+                $queryBuilder->addOrderBy($tSort['sort'], $tSort['direction']);
+            }
+
+            /** @var OrderBy $sort */
             foreach ($_initial_order as $sort) {
                 $queryBuilder->addOrderBy($sort);
             }
@@ -87,7 +95,7 @@ class SearchHelper
      * @param array<string, TWhere[]|array<string, TWhere[]>> $whereFilters
      * @param array<string, string>                           $fields
      */
-    public static function setQbDBALSearchClause(QueryBuilderDBAL $queryBuilderDBAL, array $whereFilters, array $fields): void
+    private static function setQbDBALSearchClause(QueryBuilderDBAL $queryBuilderDBAL, array $whereFilters, array $fields): void
     {
         foreach ($fields as $searchKey => $field) {
             if (!isset($whereFilters[$searchKey])) {
@@ -165,27 +173,29 @@ class SearchHelper
 
     /**
      * @todo: Need rework to fix Doctrine\DBAL\Query\QueryBuilder->getQueryPart() deprecation
+     *
+     * @param array<int, TSort> $tSorts
      */
-    public static function initializeQbPaginatorOrderbyDBAL(QueryBuilderDBAL $queryBuilderDBAL, string $paginatorSort): void
+    private static function initializeQbPaginatorOrderbyDBAL(QueryBuilderDBAL $queryBuilderDBAL, array $tSorts): void
     {
-        if ('' !== $paginatorSort) {
+        if ([] !== $tSorts) {
             $_initial_order = $queryBuilderDBAL->getQueryPart('orderBy');
             $_initial_order = is_iterable($_initial_order) ? $_initial_order : [$_initial_order];
 
             $queryBuilderDBAL->resetOrderBy();
-            foreach (self::normalizePaginatorSort($paginatorSort) as $tSort) {
+            foreach ($tSorts as $tSort) {
                 $queryBuilderDBAL->addOrderBy($tSort['sort'], $tSort['direction']);
             }
 
             /** @var string $initSort */
             foreach ($_initial_order as $initSort) {
-                $tSorts = self::normalizePaginatorSort($paginatorSort);
-                if ([] === $tSorts) {
+                $initTSorts = self::normalizePaginatorSort($initSort);
+                if ([] === $initTSorts) {
                     continue;
                 }
 
-                foreach ($tSorts as $tSort) {
-                    $queryBuilderDBAL->addOrderBy($tSort['sort'], $tSort['direction']);
+                foreach ($initTSorts as $initTSort) {
+                    $queryBuilderDBAL->addOrderBy($initTSort['sort'], $initTSort['direction']);
                 }
             }
         }

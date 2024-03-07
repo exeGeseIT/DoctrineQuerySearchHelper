@@ -34,7 +34,7 @@ return RectorConfig::configure()
     ->withSets([
         DoctrineSetList::DOCTRINE_BUNDLE_210,
         DoctrineSetList::DOCTRINE_CODE_QUALITY,
-        DoctrineSetList::DOCTRINE_DBAL_30,
+        DoctrineSetList::DOCTRINE_DBAL_40,
     ])
     ->withRules([
         InlineConstructorDefaultToPropertyRector::class,

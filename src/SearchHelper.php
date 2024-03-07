@@ -3,6 +3,7 @@
 namespace ExeGeseIT\DoctrineQuerySearchHelper;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Doctrine\DBAL\Query\QueryBuilder as QueryBuilderDBAL;
 use Doctrine\ORM\Query\Expr\Andx;
@@ -54,6 +55,11 @@ class SearchHelper
         }
     }
 
+    /**
+     * ./!\ CAUTION WITH DBAL\QueryBuilder /!\.
+     *
+     * Default orderBy statement must be part of the $paginatorSort parameter, otherwise it will be lost when sorting.
+     */
     public static function initializeQbPaginatorOrderby(QueryBuilder|QueryBuilderDBAL $qb, ?string $paginatorSort): void
     {
         $tSorts = self::normalizePaginatorSort($paginatorSort ?? '');
@@ -130,7 +136,7 @@ class SearchHelper
                     $queryBuilderDBAL->andWhere($queryBuilderDBAL->expr()->{$expFn}($field, ':' . $_searchKey));
 
                     if (self::NULL_VALUE !== $_value) {
-                        $_typeValue = null;
+                        $_typeValue = ParameterType::STRING;
 
                         if (is_array($_value)) {
                             $_typeValue = is_int($_value[0]) ? ArrayParameterType::INTEGER : ArrayParameterType::STRING;
@@ -172,31 +178,14 @@ class SearchHelper
     }
 
     /**
-     * @todo: Need rework to fix Doctrine\DBAL\Query\QueryBuilder->getQueryPart() deprecation
-     *
      * @param array<int, TSort> $tSorts
      */
     private static function initializeQbPaginatorOrderbyDBAL(QueryBuilderDBAL $queryBuilderDBAL, array $tSorts): void
     {
         if ([] !== $tSorts) {
-            $_initial_order = $queryBuilderDBAL->getQueryPart('orderBy');
-            $_initial_order = is_iterable($_initial_order) ? $_initial_order : [$_initial_order];
-
             $queryBuilderDBAL->resetOrderBy();
             foreach ($tSorts as $tSort) {
                 $queryBuilderDBAL->addOrderBy($tSort['sort'], $tSort['direction']);
-            }
-
-            /** @var string $initSort */
-            foreach ($_initial_order as $initSort) {
-                $initTSorts = self::normalizePaginatorSort($initSort);
-                if ([] === $initTSorts) {
-                    continue;
-                }
-
-                foreach ($initTSorts as $initTSort) {
-                    $queryBuilderDBAL->addOrderBy($initTSort['sort'], $initTSort['direction']);
-                }
             }
         }
     }
@@ -524,7 +513,7 @@ class SearchHelper
                     );
 
                     if (self::NULL_VALUE !== $_value) {
-                        $_typeValue = null;
+                        $_typeValue = ParameterType::STRING;
 
                         if (is_array($_value)) {
                             $_typeValue = is_int($_value[0]) ? ArrayParameterType::INTEGER : ArrayParameterType::STRING;
@@ -583,7 +572,7 @@ class SearchHelper
                     );
 
                     if (self::NULL_VALUE !== $_value) {
-                        $_typeValue = null;
+                        $_typeValue = ParameterType::STRING;
 
                         if (is_array($_value)) {
                             $_typeValue = is_int($_value[0]) ? ArrayParameterType::INTEGER : ArrayParameterType::STRING;

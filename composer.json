@@ -24,9 +24,6 @@
         "tomasvotruba/cognitive-complexity": "^0.2",
         "tomasvotruba/type-coverage": "^0.2"
     },
-    "conflict": {
-        "doctrine/dbal": ">=4.0"
-    },
     "config": {
         "allow-plugins": {
             "composer/package-versions-deprecated": true,

@@ -16,6 +16,7 @@ use Doctrine\ORM\QueryBuilder;
  * @phpstan-type TSearchvalue  array<int|string>|bool|int|string
  * @phpstan-type TSearch       array<string, TSearchvalue|array<string, TSearchvalue>>
  * @phpstan-type TWhere        array{'expFn': string, 'value': TSearchvalue}
+ * @phpstan-type TSort         array{'sort': string, 'direction': string}
  */
 class SearchHelper
 {
@@ -64,7 +65,7 @@ class SearchHelper
 
     public static function initializeQbPaginatorOrderbyDQL(QueryBuilder $queryBuilder, string $paginatorSort): void
     {
-        if ('' !== $paginatorSort && '0' !== $paginatorSort) {
+        if ('' !== $paginatorSort) {
             $_initial_order = $queryBuilder->getDQLPart('orderBy');
             $_initial_order = is_iterable($_initial_order) ? $_initial_order : [$_initial_order];
             $queryBuilder->add('orderBy', str_replace('+', ',', $paginatorSort));
@@ -167,16 +168,49 @@ class SearchHelper
      */
     public static function initializeQbPaginatorOrderbyDBAL(QueryBuilderDBAL $queryBuilderDBAL, string $paginatorSort): void
     {
-        if ('' !== $paginatorSort && '0' !== $paginatorSort) {
+        if ('' !== $paginatorSort) {
             $_initial_order = $queryBuilderDBAL->getQueryPart('orderBy');
             $_initial_order = is_iterable($_initial_order) ? $_initial_order : [$_initial_order];
-            $queryBuilderDBAL->add('orderBy', str_replace('+', ',', $paginatorSort));
 
-            /** @var string $sort */
-            foreach ($_initial_order as $sort) {
-                $queryBuilderDBAL->addOrderBy($sort);
+            $queryBuilderDBAL->resetOrderBy();
+            foreach (self::normalizePaginatorSort($paginatorSort) as $tSort) {
+                $queryBuilderDBAL->addOrderBy($tSort['sort'], $tSort['direction']);
+            }
+
+            /** @var string $initSort */
+            foreach ($_initial_order as $initSort) {
+                $tSorts = self::normalizePaginatorSort($paginatorSort);
+                if ([] === $tSorts) {
+                    continue;
+                }
+
+                foreach ($tSorts as $tSort) {
+                    $queryBuilderDBAL->addOrderBy($tSort['sort'], $tSort['direction']);
+                }
             }
         }
+    }
+
+    /**
+     * @return array<int, TSort>
+     */
+    private static function normalizePaginatorSort(string $paginatorSort): array
+    {
+        $paginatorSort = trim(preg_replace('/\s\s/', ' ', $paginatorSort) ?? '');
+        if ('' === $paginatorSort) {
+            return [];
+        }
+
+        $tSorts = [];
+        foreach (explode(',', $paginatorSort) as $order) {
+            $v = explode(' ', $order);
+            $tSorts[] = [
+                'sort' => $v[0],
+                'direction' => $v[1] ?? 'ASC',
+            ];
+        }
+
+        return $tSorts;
     }
 
     /**

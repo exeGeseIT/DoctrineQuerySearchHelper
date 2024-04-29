@@ -35,6 +35,8 @@ class SearchFilter
 
     final public const AND_OR = '&|';
 
+    final public const AND = '&';
+
     public static function normalize(string $filter): string
     {
         $_filter = $filter;
@@ -105,6 +107,15 @@ class SearchFilter
     public static function andOr(): string
     {
         return self::AND_OR . self::getToken();
+    }
+
+    /**
+     * ...WHERE 1
+     *    {{ AND ( .. AND .. AND ..) }}.
+     */
+    public static function and(): string
+    {
+        return self::AND . self::getToken();
     }
 
     /**

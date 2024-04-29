@@ -7,6 +7,7 @@ use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Doctrine\DBAL\Query\QueryBuilder as QueryBuilderDBAL;
 use Doctrine\ORM\Query\Expr\Andx;
+use Doctrine\ORM\Query\Expr\Composite;
 use Doctrine\ORM\Query\Expr\OrderBy;
 use Doctrine\ORM\Query\Expr\Orx;
 use Doctrine\ORM\QueryBuilder;
@@ -22,6 +23,12 @@ use Doctrine\ORM\QueryBuilder;
 class SearchHelper
 {
     private const NULL_VALUE = '_NULL_';
+
+    private const COMPOSITE_FILTERS = [
+        SearchFilter::AND => 'and',
+        SearchFilter::OR => 'or',
+        SearchFilter::AND_OR => 'andor',
+    ];
 
     /**
      * @param array<string|int>|string|int $searched
@@ -148,30 +155,36 @@ class SearchHelper
             }
         }
 
-        // .. AND (field1 ... OR field2 ...)
-        if (array_key_exists(SearchFilter::AND_OR, $whereFilters)) {
-            $iteration = 0;
+        self::addCompositeDBALParts($queryBuilderDBAL, $whereFilters, $fields);
+    }
 
-            /** @var array<string, TWhere[]> $andORFilters */
-            foreach ($whereFilters[SearchFilter::AND_OR] as $andORFilters) {
-                ++$iteration;
+    /**
+     * @param array<string, TWhere[]|array<string, TWhere[]>> $whereFilters
+     * @param array<string, string>                           $fields
+     */
+    private static function addCompositeDBALParts(QueryBuilderDBAL $queryBuilderDBAL, array $whereFilters, array $fields): void
+    {
+        foreach (self::COMPOSITE_FILTERS as $COMPPKey => $radicalKey) {
+            if (array_key_exists($COMPPKey, $whereFilters)) {
+                $iteration = 0;
 
-                if (($ANDorStatements = self::getAndOrDBALStatement($queryBuilderDBAL, $andORFilters, $fields, $iteration)) instanceof CompositeExpression) {
-                    $queryBuilderDBAL->andWhere($ANDorStatements);
-                }
-            }
-        }
+                /** @var array<string, TWhere[]> $compositeSearchFilters */
+                foreach ($whereFilters[$COMPPKey] as $compositeSearchFilters) {
+                    ++$iteration;
 
-        // .. OR (field1 ... AND field2 ...)
-        if (array_key_exists(SearchFilter::OR, $whereFilters)) {
-            $iteration = 0;
+                    [$compositePartAdder, $compositeType] = match ($COMPPKey) {
+                        // .. AND (field1 ... AND field2 ...)
+                        SearchFilter::AND => ['andWhere', CompositeExpression::TYPE_AND],
+                        // .. AND (field1 ... OR field2 ...)
+                        SearchFilter::AND_OR => ['andWhere', CompositeExpression::TYPE_OR],
+                        // .. OR (field1 ... AND field2 ...)
+                        SearchFilter::OR => ['orWhere', CompositeExpression::TYPE_AND],
+                    };
 
-            /** @var array<string, TWhere[]> $orFilters */
-            foreach ($whereFilters[SearchFilter::OR] as $orFilters) {
-                ++$iteration;
-
-                if (($ORStatements = self::getOrDBALStatement($queryBuilderDBAL, $orFilters, $fields, $iteration)) instanceof CompositeExpression) {
-                    $queryBuilderDBAL->orWhere($ORStatements);
+                    $radical = sprintf('%s%d', $radicalKey, $iteration);
+                    if (($ANDStatements = self::getCompositeDBALStatement($queryBuilderDBAL, $compositeSearchFilters, $fields, $radical, $compositeType)) instanceof CompositeExpression) {
+                        $queryBuilderDBAL->{$compositeType}($ANDStatements);
+                    }
                 }
             }
         }
@@ -221,6 +234,8 @@ class SearchHelper
     {
         $clauseFilters = [];
 
+        $COMPOSITE_FILTERS_KEYS = array_keys(self::COMPOSITE_FILTERS);
+
         foreach ($search as $ckey => $value) {
             $m = SearchFilter::decodeSearchfilter($ckey);
 
@@ -229,7 +244,7 @@ class SearchHelper
 
             $expFn = null;
 
-            if (is_iterable($value) && in_array($filter, [SearchFilter::OR, SearchFilter::AND_OR])) {
+            if (is_iterable($value) && in_array($filter, $COMPOSITE_FILTERS_KEYS)) {
                 if (!array_key_exists($filter, $clauseFilters)) {
                     $clauseFilters[$filter] = [];
                 }
@@ -346,51 +361,71 @@ class SearchHelper
             }
         }
 
-        // .. AND (field1 ... OR field2 ...)
-        if (array_key_exists(SearchFilter::AND_OR, $whereFilters)) {
-            $iteration = 0;
+        self::addCompositeDQLParts($queryBuilder, $whereFilters, $fields);
+    }
 
-            /** @var array<string, TWhere[]> $andORFilters */
-            foreach ($whereFilters[SearchFilter::AND_OR] as $andORFilters) {
-                ++$iteration;
+    /**
+     * @param array<string, TWhere[]|array<string, TWhere[]>> $whereFilters
+     * @param array<string, string>                           $fields
+     */
+    private static function addCompositeDQLParts(QueryBuilder $queryBuilder, array $whereFilters, array $fields): void
+    {
+        foreach (self::COMPOSITE_FILTERS as $COMPPKey => $radicalKey) {
+            if (array_key_exists($COMPPKey, $whereFilters)) {
+                $iteration = 0;
 
-                if (($ANDorStatements = self::getAndOrDQLStatement($queryBuilder, $andORFilters, $fields, $iteration)) instanceof Orx) {
-                    $queryBuilder->andWhere($ANDorStatements);
-                }
-            }
-        }
+                /** @var array<string, TWhere[]> $compositeSearchFilters */
+                foreach ($whereFilters[$COMPPKey] as $compositeSearchFilters) {
+                    ++$iteration;
 
-        // .. OR (field1 ... AND field2 ...)
-        if (array_key_exists(SearchFilter::OR, $whereFilters)) {
-            $iteration = 0;
+                    /*$t = array_filter($compositeSearchFilters, fn($k) => in_array($k, array_keys(self::COMPOSITE_FILTERS)), ARRAY_FILTER_USE_KEY);
+                    dump([$COMPPKey => [$compositeSearchFilters, $t]]);*/
 
-            /** @var array<string, TWhere[]> $orFilters */
-            foreach ($whereFilters[SearchFilter::OR] as $orFilters) {
-                ++$iteration;
+                    [$compositePartAdder, $compositeClass] = match ($COMPPKey) {
+                        // .. AND (field1 ... AND field2 ...)
+                        SearchFilter::AND => ['andWhere', Andx::class],
+                        // .. AND (field1 ... OR field2 ...)
+                        SearchFilter::AND_OR => ['andWhere', Orx::class],
+                        // .. OR (field1 ... AND field2 ...)
+                        SearchFilter::OR => ['orWhere', Andx::class],
+                    };
 
-                if (($ORStatements = self::getOrDQLStatement($queryBuilder, $orFilters, $fields, $iteration)) instanceof Andx) {
-                    $queryBuilder->orWhere($ORStatements);
+                    $radical = sprintf('%s%d', $radicalKey, $iteration);
+                    if (($CompositeStatement = self::getCompositeDQLStatement($queryBuilder, $compositeSearchFilters, $fields, $radical, $compositeClass)) instanceof Composite) {
+                        $queryBuilder->{$compositePartAdder}($CompositeStatement);
+                    }
                 }
             }
         }
     }
 
     /**
-     * @param array<string, TWhere[]> $andORFilters
+     * @param array<string, TWhere[]> $compositeFilters
      * @param array<string, string>   $fields
+     * @param class-string<AndX|OrX>  $compositeClass
      */
-    private static function getAndOrDQLStatement(QueryBuilder $queryBuilder, array $andORFilters, array $fields, int $iteration): ?Orx
+    private static function getCompositeDQLStatement(QueryBuilder $queryBuilder, array $compositeFilters, array $fields, string $radical, string $compositeClass): ?Composite
     {
-        $ANDorStatements = null;
+        $CompositeStatement = null;
         foreach ($fields as $searchKey => $field) {
-            if (!isset($andORFilters[$searchKey])) {
+            if (!isset($compositeFilters[$searchKey])) {
                 continue;
             }
 
-            $ANDorStatements ??= $queryBuilder->expr()->orX();
+            if (!$CompositeStatement instanceof Composite) {
+                $CompositeStatement = match ($compositeClass) {
+                    Andx::class => $queryBuilder->expr()->andX(),
+                    Orx::class => $queryBuilder->expr()->orX(),
+                    default => null,
+                };
 
-            foreach ($andORFilters[$searchKey] as $index => $criteria) {
-                $_searchKey = sprintf('andor%d_%s_i%d', $iteration, $searchKey, $index);
+                if (!$CompositeStatement instanceof Composite) {
+                    break;
+                }
+            }
+
+            foreach ($compositeFilters[$searchKey] as $index => $criteria) {
+                $_searchKey = sprintf('%s_%s_i%d', $radical, $searchKey, $index);
                 $expFn = $criteria['expFn'];
                 $_value = $criteria['value'];
 
@@ -406,9 +441,9 @@ class SearchHelper
                         );
                     }
 
-                    $ANDorStatements->add($orStatements);
+                    $CompositeStatement->add($orStatements);
                 } else {
-                    $ANDorStatements->add(
+                    $CompositeStatement->add(
                         $queryBuilder->expr()->{$expFn}($field, ':' . $_searchKey)
                     );
 
@@ -419,72 +454,31 @@ class SearchHelper
             }
         }
 
-        return $ANDorStatements;
+        return $CompositeStatement;
     }
 
     /**
-     * @param array<string, TWhere[]> $orFilters
-     * @param array<string, string>   $fields
+     * @param array<string, TWhere[]>     $compositeFilters
+     * @param array<string, string>       $fields
+     * @param CompositeExpression::TYPE_* $compositeType
      */
-    private static function getOrDQLStatement(QueryBuilder $queryBuilder, array $orFilters, array $fields, int $iteration): ?Andx
+    private static function getCompositeDBALStatement(QueryBuilderDBAL $queryBuilderDBAL, array $compositeFilters, array $fields, string $radical, string $compositeType): ?CompositeExpression
     {
-        $ORStatements = null;
+        $CompositeStatement = null;
         foreach ($fields as $searchKey => $field) {
-            if (!isset($orFilters[$searchKey])) {
+            if (!isset($compositeFilters[$searchKey])) {
                 continue;
             }
 
-            $ORStatements ??= $queryBuilder->expr()->andX();
-
-            foreach ($orFilters[$searchKey] as $index => $criteria) {
-                $_searchKey = sprintf('or%d_%s_i%d', $iteration, $searchKey, $index);
-                $expFn = $criteria['expFn'];
-                $_value = $criteria['value'];
-
-                if (!in_array($expFn, ['in', 'notIn']) && is_array($_value)) {
-                    $i = 0;
-                    $orStatements = $queryBuilder->expr()->orX();
-                    foreach ($_value as $pattern) {
-                        $parameter = sprintf('%s_%d', $_searchKey, $i++);
-                        $orStatements->add(
-                            $queryBuilder
-                                ->setParameter($parameter, $pattern)
-                                ->expr()->{$expFn}($field, ':' . $parameter)
-                        );
-                    }
-
-                    $ORStatements->add($orStatements);
-                } else {
-                    $ORStatements->add(
-                        $queryBuilder->expr()->{$expFn}($field, ':' . $_searchKey)
-                    );
-
-                    if (self::NULL_VALUE !== $_value) {
-                        $queryBuilder->setParameter($_searchKey, $_value);
-                    }
-                }
-            }
-        }
-
-        return $ORStatements;
-    }
-
-    /**
-     * @param array<string, TWhere[]> $andORFilters
-     * @param array<string, string>   $fields
-     */
-    private static function getAndOrDBALStatement(QueryBuilderDBAL $queryBuilderDBAL, array $andORFilters, array $fields, int $iteration): ?CompositeExpression
-    {
-        $ANDorStatements = null;
-        foreach ($fields as $searchKey => $field) {
-            if (!isset($andORFilters[$searchKey])) {
-                continue;
+            if (!$CompositeStatement instanceof CompositeExpression) {
+                $CompositeStatement = match ($compositeType) {
+                    CompositeExpression::TYPE_AND => $queryBuilderDBAL->expr()->and('1=1'),
+                    CompositeExpression::TYPE_OR => $queryBuilderDBAL->expr()->or('1=0'),
+                };
             }
 
-            $ANDorStatements ??= $queryBuilderDBAL->expr()->or('1=0');
-
-            foreach ($andORFilters[$searchKey] as $index => $criteria) {
-                $_searchKey = sprintf('andor%d_%s_i%d', $iteration, $searchKey, $index);
+            foreach ($compositeFilters[$searchKey] as $index => $criteria) {
+                $_searchKey = sprintf('%s_%s_i%d', $radical, $searchKey, $index);
                 $expFn = $criteria['expFn'];
                 $_value = $criteria['value'];
 
@@ -506,9 +500,9 @@ class SearchHelper
                         );
                     }
 
-                    $ANDorStatements = $ANDorStatements->with($orStatements);
+                    $CompositeStatement = $CompositeStatement->with($orStatements);
                 } else {
-                    $ANDorStatements = $ANDorStatements->with(
+                    $CompositeStatement = $CompositeStatement->with(
                         $queryBuilderDBAL->expr()->{$expFn}($field, ':' . $_searchKey)
                     );
 
@@ -525,65 +519,6 @@ class SearchHelper
             }
         }
 
-        return $ANDorStatements;
-    }
-
-    /**
-     * @param array<string, TWhere[]> $orFilters
-     * @param array<string, string>   $fields
-     */
-    private static function getOrDBALStatement(QueryBuilderDBAL $queryBuilderDBAL, array $orFilters, array $fields, int $iteration): ?CompositeExpression
-    {
-        $ORStatements = null;
-        foreach ($fields as $searchKey => $field) {
-            if (!isset($orFilters[$searchKey])) {
-                continue;
-            }
-
-            $ORStatements ??= $queryBuilderDBAL->expr()->and('1=1');
-
-            foreach ($orFilters[$searchKey] as $index => $criteria) {
-                $_searchKey = sprintf('or%d_%s_i%d', $iteration, $searchKey, $index);
-                $expFn = $criteria['expFn'];
-                $_value = $criteria['value'];
-
-                if (!in_array($expFn, ['in', 'notIn']) && is_array($_value)) {
-                    $i = 0;
-                    $pattern = array_shift($_value);
-                    $parameter = sprintf('%s_%d', $_searchKey, $i++);
-                    $orStatements = $queryBuilderDBAL->expr()->or(
-                        $queryBuilderDBAL
-                            ->setParameter($parameter, $pattern)
-                            ->expr()->{$expFn}($field, ':' . $parameter)
-                    );
-                    foreach ($_value as $pattern) {
-                        $parameter = sprintf('%s_%d', $_searchKey, $i++);
-                        $orStatements = $orStatements->with(
-                            $queryBuilderDBAL
-                                ->setParameter($parameter, $pattern)
-                                ->expr()->{$expFn}($field, ':' . $parameter)
-                        );
-                    }
-
-                    $ORStatements = $ORStatements->with($orStatements);
-                } else {
-                    $ORStatements = $ORStatements->with(
-                        $queryBuilderDBAL->expr()->{$expFn}($field, ':' . $_searchKey)
-                    );
-
-                    if (self::NULL_VALUE !== $_value) {
-                        $_typeValue = ParameterType::STRING;
-
-                        if (is_array($_value)) {
-                            $_typeValue = is_int($_value[0]) ? ArrayParameterType::INTEGER : ArrayParameterType::STRING;
-                        }
-
-                        $queryBuilderDBAL->setParameter($_searchKey, $_value, $_typeValue);
-                    }
-                }
-            }
-        }
-
-        return $ORStatements;
+        return $CompositeStatement;
     }
 }

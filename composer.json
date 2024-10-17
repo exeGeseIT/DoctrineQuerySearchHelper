@@ -22,13 +22,22 @@
         "rector/rector": "^1.0",
         "symplify/easy-coding-standard": "^12.1",
         "tomasvotruba/cognitive-complexity": "^0.2",
-        "tomasvotruba/type-coverage": "^0.2"
+        "tomasvotruba/type-coverage": "^1.0"
+    },
+    "scripts": {
+        "cs:phpstan": "@php vendor/bin/phpstan analyze --ansi",
+        "cs:phpstan:cache:clear-result": "@php vendor/bin/phpstan clear-result-cache --ansi",
+        "cs:rector": "@php vendor/bin/rector --dry-run --ansi",
+        "cs:rector:fix": "@php vendor/bin/rector process --ansi",
+        "cs:ecs": "@php vendor/bin/ecs check",
+        "cs:ecs:fix": "@php vendor/bin/ecs check --fix"
     },
     "config": {
         "allow-plugins": {
             "composer/package-versions-deprecated": true,
             "phpstan/extension-installer": true
         },
+        "optimize-autoloader": true,
         "sort-packages": true
     },
     "autoload": {

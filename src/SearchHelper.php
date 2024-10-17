@@ -23,7 +23,6 @@ use Doctrine\ORM\QueryBuilder;
 class SearchHelper
 {
     private const NULL_VALUE = '_NULL_';
-
     private const COMPOSITE_FILTERS = [
         SearchFilter::AND => 'and',
         SearchFilter::OR => 'or',
@@ -70,6 +69,7 @@ class SearchHelper
     public static function initializeQbPaginatorOrderby(QueryBuilder|QueryBuilderDBAL $qb, ?string $paginatorSort): void
     {
         $tSorts = self::normalizePaginatorSort($paginatorSort ?? '');
+
         if ($qb instanceof QueryBuilder) {
             self::initializeQbPaginatorOrderbyDQL($qb, $tSorts);
         } else {
@@ -182,6 +182,7 @@ class SearchHelper
                     };
 
                     $radical = sprintf('%s%d', $radicalKey, $iteration);
+
                     if (($ANDStatements = self::getCompositeDBALStatement($queryBuilderDBAL, $compositeSearchFilters, $fields, $radical, $compositeType)) instanceof CompositeExpression) {
                         $queryBuilderDBAL->{$compositeType}($ANDStatements);
                     }
@@ -209,6 +210,7 @@ class SearchHelper
     private static function normalizePaginatorSort(string $paginatorSort): array
     {
         $paginatorSort = trim(preg_replace('/\s\s/', ' ', $paginatorSort) ?? '');
+
         if ('' === $paginatorSort) {
             return [];
         }
@@ -391,6 +393,7 @@ class SearchHelper
                     };
 
                     $radical = sprintf('%s%d', $radicalKey, $iteration);
+
                     if (($CompositeStatement = self::getCompositeDQLStatement($queryBuilder, $compositeSearchFilters, $fields, $radical, $compositeClass)) instanceof Composite) {
                         $queryBuilder->{$compositePartAdder}($CompositeStatement);
                     }

@@ -159,8 +159,8 @@ class SearchHelper
     }
 
     /**
-     * @param array<string, TWhere[]|array<string, TWhere[]>> $whereFilters
-     * @param array<string, string>                           $fields
+     * @param array<string, mixed>  $whereFilters ( TWhere[] || array<string, TWhere[] )
+     * @param array<string, string> $fields
      */
     private static function addCompositeDBALParts(QueryBuilderDBAL $queryBuilderDBAL, array $whereFilters, array $fields): void
     {
@@ -168,8 +168,10 @@ class SearchHelper
             if (array_key_exists($COMPPKey, $whereFilters)) {
                 $iteration = 0;
 
-                /** @var array<string, TWhere[]> $compositeSearchFilters */
-                foreach ($whereFilters[$COMPPKey] as $compositeSearchFilters) {
+                /** @var array<array<string, TWhere[]>> $compositCOMPPKey */
+                $compositCOMPPKey = $whereFilters[$COMPPKey];
+
+                foreach ($compositCOMPPKey as $compositeSearchFilters) {
                     ++$iteration;
 
                     [$compositePartAdder, $compositeType] = match ($COMPPKey) {
@@ -367,8 +369,8 @@ class SearchHelper
     }
 
     /**
-     * @param array<string, TWhere[]|array<string, TWhere[]>> $whereFilters
-     * @param array<string, string>                           $fields
+     * @param array<string, mixed>  $whereFilters ( TWhere[] || array<string, TWhere[] )
+     * @param array<string, string> $fields
      */
     private static function addCompositeDQLParts(QueryBuilder $queryBuilder, array $whereFilters, array $fields): void
     {
@@ -376,8 +378,10 @@ class SearchHelper
             if (array_key_exists($COMPPKey, $whereFilters)) {
                 $iteration = 0;
 
-                /** @var array<string, TWhere[]> $compositeSearchFilters */
-                foreach ($whereFilters[$COMPPKey] as $compositeSearchFilters) {
+                /** @var array<array<string, TWhere[]>> $compositCOMPPKey */
+                $compositCOMPPKey = $whereFilters[$COMPPKey];
+
+                foreach ($compositCOMPPKey as $compositeSearchFilters) {
                     ++$iteration;
 
                     /*$t = array_filter($compositeSearchFilters, fn($k) => in_array($k, array_keys(self::COMPOSITE_FILTERS)), ARRAY_FILTER_USE_KEY);

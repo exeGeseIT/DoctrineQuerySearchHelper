@@ -209,15 +209,15 @@ class SearchHelper
      */
     private static function normalizePaginatorSort(string $paginatorSort): array
     {
-        $paginatorSort = trim(preg_replace('/\s\s/', ' ', $paginatorSort) ?? '');
-
-        if ('' === $paginatorSort) {
-            return [];
-        }
-
         $tSorts = [];
         foreach (explode(',', $paginatorSort) as $order) {
-            $v = explode(' ', $order);
+            $_order = trim($order);
+
+            if ('' === $_order) {
+                continue;
+            }
+
+            $v = explode(' ', $_order);
             $tSorts[] = [
                 'sort' => $v[0],
                 'direction' => $v[1] ?? 'ASC',
@@ -405,7 +405,7 @@ class SearchHelper
     /**
      * @param array<string, TWhere[]> $compositeFilters
      * @param array<string, string>   $fields
-     * @param class-string<AndX|OrX>  $compositeClass
+     * @param class-string<Andx|Orx>  $compositeClass
      */
     private static function getCompositeDQLStatement(QueryBuilder $queryBuilder, array $compositeFilters, array $fields, string $radical, string $compositeClass): ?Composite
     {

@@ -355,6 +355,17 @@ SearchFilter::andOr(): string
 ```php
 /**
  * ...WHERE 1
+ *    {{ AND ( .. AND .. AND ..) }}.
+ * 
+ * @return string
+ */
+SearchFilter::and(): string
+```
+
+
+```php
+/**
+ * ...WHERE 1
  *    {{ OR ( .. AND .. AND ..) }}
  * 
  * @return string

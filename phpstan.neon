@@ -1,5 +1,7 @@
 includes:
-    - phpstan-baseline.neon 
+    # uncomment for testing bleeding edge features
+    #- phar://phpstan.phar/conf/bleedingEdge.neon
+    - phpstan-baseline.neon
 
 parameters:
     level: max
@@ -16,3 +18,8 @@ parameters:
     cognitive_complexity:
         class: 210 #40
         function: 40 #9
+
+    strictRules:
+        booleansInConditions: false
+        strictFunctionCalls: false
+        noVariableVariables: false

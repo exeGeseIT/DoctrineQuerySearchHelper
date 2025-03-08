@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Rector\CodeQuality\Rector\Class_\InlineConstructorDefaultToPropertyRector;
 use Rector\Config\RectorConfig;
-use Rector\Doctrine\Set\DoctrineSetList;
 
 return RectorConfig::configure()
     // ->withoutParallel()
@@ -25,17 +24,18 @@ return RectorConfig::configure()
         codingStyle: true,
         typeDeclarations: true,
         privatization: true,
-        strictBooleans: true,
+        naming: true,
         instanceOf: true,
         earlyReturn: true,
-        naming: true
+        strictBooleans: true,
+        rectorPreset: true,
+        doctrineCodeQuality: true,
+        symfonyCodeQuality: true,
     )
-    ->withAttributesSets(doctrine: true)
-    ->withSets([
-        DoctrineSetList::DOCTRINE_BUNDLE_210,
-        DoctrineSetList::DOCTRINE_CODE_QUALITY,
-        DoctrineSetList::DOCTRINE_DBAL_40,
-    ])
+    ->withComposerBased(
+        doctrine: true,
+    )
+    ->withAttributesSets(all: true)
     ->withRules([
         InlineConstructorDefaultToPropertyRector::class,
     ])

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ExeGeseIT\DoctrineQuerySearchHelper;
 
 /**
@@ -19,9 +21,14 @@ class SearchFilter
     final public const GREATER_OR_EQUAL = '>=';
     final public const LOWER = '<';
     final public const LOWER_OR_EQUAL = '<=';
-    final public const OR = '|';
-    final public const AND_OR = '&|';
-    final public const AND = '&';
+    final public const COMPOSITE_OR = '|';
+    final public const COMPOSITE_AND_OR = '&|';
+    final public const COMPOSITE_AND = '&';
+    final public const COMPOSITE_FILTERS = [
+        self::COMPOSITE_AND,
+        self::COMPOSITE_OR,
+        self::COMPOSITE_AND_OR,
+    ];
 
     public static function normalize(string $filter): string
     {
@@ -92,7 +99,7 @@ class SearchFilter
      */
     public static function andOr(): string
     {
-        return self::AND_OR . self::getToken();
+        return self::COMPOSITE_AND_OR . self::getToken();
     }
 
     /**
@@ -101,7 +108,7 @@ class SearchFilter
      */
     public static function and(): string
     {
-        return self::AND . self::getToken();
+        return self::COMPOSITE_AND . self::getToken();
     }
 
     /**
@@ -110,7 +117,7 @@ class SearchFilter
      */
     public static function or(): string
     {
-        return self::OR . self::getToken();
+        return self::COMPOSITE_OR . self::getToken();
     }
 
     /**
@@ -269,7 +276,7 @@ class SearchFilter
     {
         yield self::EQUAL => ['=='];
         yield self::NOT_EQUAL => ['!='];
-        yield self::OR => ['||'];
+        yield self::COMPOSITE_OR => ['||'];
     }
 
     private static function getToken(): string

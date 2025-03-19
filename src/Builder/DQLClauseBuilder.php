@@ -69,9 +69,7 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
             }
         }
 
-        error_log(\Symfony\Component\VarExporter\VarExporter::export($compositeWhereFilters));
-        // error_log(var_export([__METHOD__ => /*\Nette\Utils\Json::encode*/($compositeWhereFilters)], true));
-
+        // error_log(\Symfony\Component\VarExporter\VarExporter::export($compositeWhereFilters));
         foreach ($this->searchFields as $searchKey => $field) {
             if (!isset($whereFilters[$searchKey])) {
                 continue;
@@ -119,7 +117,7 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
         foreach ($compositeWhereFilters as $COMPPKey => $compositCOMPPKey) {
             ++$iteration;
 
-            // error_log(var_export([__METHOD__   . $COMPPKey => $compositCOMPPKey], true));
+            // error_log(\Symfony\Component\VarExporter\VarExporter::export([$COMPPKey => $compositCOMPPKey]));
             if (!in_array($COMPPKey, SearchFilter::COMPOSITE_FILTERS)) {
                 continue;
             }

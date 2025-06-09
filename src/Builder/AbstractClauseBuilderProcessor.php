@@ -122,7 +122,8 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
      */
     protected function getWhereFilters(?array $search): ?array
     {
-        $clauseFilters = SearchHelper::parseSearchParameters($this->getSearchFilters($search));
+        $searchHelper = new SearchHelper($this->getSearchFilters($search));
+        $clauseFilters = $searchHelper->getClauseFilters();
 
         if ([] === $clauseFilters) {
             return null;

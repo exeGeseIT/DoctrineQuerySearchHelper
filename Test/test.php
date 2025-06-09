@@ -43,10 +43,16 @@ $searchData = [
     SearchFilter::andOr() => [
         SearchFilter::equal('isremoval') => true,
         SearchFilter::equal('deliveryformStatus') => [Deliveryformstatus::ABSENT, Deliveryformstatus::DELIVERED],
+        SearchFilter::or() => [
+            SearchFilter::equal('deliveryformStatus') => Deliveryformstatus::DOCKED,
+            SearchFilter::equal('isremoval') => false,
+        ],
     ],
     SearchFilter::or() => [
         SearchFilter::equal('deliveryformStatus') => Deliveryformstatus::DOCKED,
+        SearchFilter::equal('isremoval') => false,
     ],
+
 ];
 
 echo VarExporter::export($searchData);

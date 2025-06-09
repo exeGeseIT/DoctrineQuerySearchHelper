@@ -19,6 +19,27 @@ final class SearchHelper
     public const NULL_VALUE = '_NULL_';
 
     /**
+     * @var array<string, list<TWhere>>|non-empty-array<string, array<string, list<TWhere>>>
+     */
+    private array $clauseFilters = [];
+
+    /**
+     * @param TSearch $search
+     */
+    public function __construct(array $search)
+    {
+        $this->parseSearchParameters($search);
+    }
+
+    /**
+     * @return array<string, list<TWhere>>|array<string, array<string, list<TWhere>>>
+     */
+    public function getClauseFilters(): array
+    {
+        return $this->clauseFilters;
+    }
+
+    /**
      * @param TSearch $search
      */
     public static function dumpParsedSearchParameters(
@@ -28,8 +49,10 @@ final class SearchHelper
         bool $htmlSafe = false,
         bool $forceObjects = false,
     ): string {
+        $helper = new self($search);
+
         return Json::encode(
-            value: self::parseSearchParameters($search),
+            value: $helper->getClauseFilters(),
             pretty: $pretty,
             asciiSafe: $asciiSafe,
             htmlSafe: $htmlSafe,
@@ -58,15 +81,12 @@ final class SearchHelper
 
     /**
      * @param TSearch $search
-     *
-     * @return array<string, list<TWhere>>|array<string, array<string, list<TWhere>>>
      */
-    public static function parseSearchParameters(array $search): array
+    private function parseSearchParameters(array $search): void
     {
-        $clauseFilters = [];
         foreach ($search as $searchfilter => $value) {
-            if (self::isCompositeFilterValue($value)) {
-                self::addCompositeClauseFilter($clauseFilters, $searchfilter, $value);
+            if ($this->isCompositeFilterValue($value)) {
+                $this->addCompositeClauseFilter($searchfilter, $value);
                 continue;
             }
 
@@ -78,17 +98,15 @@ final class SearchHelper
                 $value = (int) $value;
             }
 
-            $filterResult = self::processFilter($filter, $value);
+            $filterResult = $this->processFilter($filter, $value);
 
             if (null === $filterResult) {
                 continue;
             }
 
             [$expFn, $processedValue] = $filterResult;
-            self::addClauseFilter($clauseFilters, $key, $expFn, $processedValue);
+            $this->addClauseFilter($key, $expFn, $processedValue);
         }
-
-        return $clauseFilters;
     }
 
     /**
@@ -96,7 +114,7 @@ final class SearchHelper
      *
      * @phpstan-assert-if-true =array<string, bool|TSearchvalue> $value
      */
-    private static function isCompositeFilterValue(mixed $value): bool
+    private function isCompositeFilterValue(mixed $value): bool
     {
         return match (true) {
             !is_array($value) => false,
@@ -105,7 +123,7 @@ final class SearchHelper
         };
     }
 
-    private static function isEmptyValue(mixed $value): bool
+    private function isEmptyValue(mixed $value): bool
     {
         return null === $value || '' === $value || [] === $value || false === $value;
     }
@@ -115,9 +133,9 @@ final class SearchHelper
      *
      * @return array{0: FilterExprFn, 1: TSearchvalue}|null
      */
-    private static function processFilter(string $filter, mixed $value): ?array
+    private function processFilter(string $filter, mixed $value): ?array
     {
-        if (self::isEmptyValue($value) && !SearchFilter::isLaxeFilter($filter)) {
+        if ($this->isEmptyValue($value) && !SearchFilter::isLaxeFilter($filter)) {
             return null;
         }
 
@@ -138,32 +156,31 @@ final class SearchHelper
     }
 
     /**
-     * @param array<string, list<TWhere>|array<string, list<TWhere>>> $clauseFilters
-     * @param TSearchvalue                                            $value
+     * @param TSearchvalue $value
      */
-    private static function addClauseFilter(array &$clauseFilters, string $key, FilterExprFn $filterExprFn, mixed $value): void
+    private function addClauseFilter(string $key, FilterExprFn $filterExprFn, mixed $value): void
     {
-        if (!isset($clauseFilters[$key])) {
-            $clauseFilters[$key] = [];
+        if (!isset($this->clauseFilters[$key])) {
+            $this->clauseFilters[$key] = [];
         }
 
-        $clauseFilters[$key][] = [
+        $this->clauseFilters[$key][] = [
             'expFn' => $filterExprFn,
             'value' => $value,
         ];
     }
 
     /**
-     * @param array<string, list<TWhere>|array<string, list<TWhere>>> $clauseFilters
-     * @param array<string, bool|TSearchvalue>                        $value
+     * @param array<string, bool|TSearchvalue> $value
      */
-    private static function addCompositeClauseFilter(array &$clauseFilters, string $searchfilter, mixed $value): void
+    private function addCompositeClauseFilter(string $searchfilter, mixed $value): void
     {
         $demuxedFilter = SearchFilter::decodeSearchfilter($searchfilter);
         $filter = $demuxedFilter['filter'];
 
         if (SearchFilter::isCompositeFilter($filter)) {
-            $clauseFilters[$searchfilter] = self::parseSearchParameters($value);
+            $helper = new self($value);
+            $this->clauseFilters[$searchfilter] = $helper->getClauseFilters();
         }
     }
 }

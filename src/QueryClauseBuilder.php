@@ -12,10 +12,8 @@ use ExeGeseIT\DoctrineQuerySearchHelper\Builder\DQLClauseBuilder;
 
 /**
  * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
- *
- * @phpstan-import-type TSearch from SearchHelper
  */
-class QueryClauseBuilder
+final class QueryClauseBuilder
 {
     private function __construct()
     {

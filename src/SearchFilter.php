@@ -7,35 +7,49 @@ namespace ExeGeseIT\DoctrineQuerySearchHelper;
 /**
  * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
  */
-class SearchFilter
+final class SearchFilter
 {
-    final public const EQUAL = '=';
-    final public const NOT_EQUAL = '!';
-    final public const LIKE = '%';
-    final public const NOT_LIKE = '!%';
-    final public const LIKE_STRICK = '%=';
-    final public const NOT_LIKE_STRICK = '!%=';
-    final public const NULL = '_';
-    final public const NOT_NULL = '!_';
-    final public const GREATER = '>';
-    final public const GREATER_OR_EQUAL = '>=';
-    final public const LOWER = '<';
-    final public const LOWER_OR_EQUAL = '<=';
-    final public const COMPOSITE_OR = '|';
-    final public const COMPOSITE_AND_OR = '&|';
-    final public const COMPOSITE_AND = '&';
-    final public const COMPOSITE_FILTERS = [
-        self::COMPOSITE_AND,
-        self::COMPOSITE_OR,
-        self::COMPOSITE_AND_OR,
-    ];
+    public const EQUAL = '=';
+    public const NOT_EQUAL = '!';
+    public const LIKE = '%';
+    public const NOT_LIKE = '!%';
+    public const LIKE_STRICT = '%=';
+    public const NOT_LIKE_STRICT = '!%=';
+    public const NULL = '_';
+    public const NOT_NULL = '!_';
+    public const GREATER = '>';
+    public const GREATER_OR_EQUAL = '>=';
+    public const LOWER = '<';
+    public const LOWER_OR_EQUAL = '<=';
+    public const COMPOSITE_OR = '|';
+    public const COMPOSITE_AND_OR = '&|';
+    public const COMPOSITE_AND = '&';
 
-    public static function normalize(string $filter): string
+    public static function isCompositeFilter(string $filter): bool
+    {
+        return in_array($filter, [
+            self::COMPOSITE_AND,
+            self::COMPOSITE_OR,
+            self::COMPOSITE_AND_OR,
+        ]);
+    }
+
+    public static function isLaxeFilter(string $filter): bool
+    {
+        return in_array($filter, [
+            self::NULL,
+            self::NOT_NULL,
+            self::EQUAL,
+            self::NOT_EQUAL,
+        ]);
+    }
+
+    private static function normalize(string $filter): string
     {
         $_filter = $filter;
         foreach (self::getAlias() as $normalizedFilter => $alias) {
             if (in_array($filter, $alias)) {
-                $filter = $normalizedFilter;
+                $_filter = $normalizedFilter;
                 break;
             }
         }
@@ -53,7 +67,7 @@ class SearchFilter
 
         return [
             'key' => $matches['key'] ?? '',
-            'filter' => $matches['filter'] ?? '',
+            'filter' => self::normalize($matches['filter'] ?? ''),
         ];
     }
 
@@ -186,7 +200,7 @@ class SearchFilter
      */
     public static function likeStrict(string $searchKey, bool $tokenize = true): string
     {
-        return self::LIKE_STRICK . trim($searchKey) . self::tokenize($tokenize);
+        return self::LIKE_STRICT . trim($searchKey) . self::tokenize($tokenize);
     }
 
     /**
@@ -200,7 +214,7 @@ class SearchFilter
      */
     public static function notLikeStrict(string $searchKey, bool $tokenize = true): string
     {
-        return self::NOT_LIKE_STRICK . trim($searchKey) . self::tokenize($tokenize);
+        return self::NOT_LIKE_STRICT . trim($searchKey) . self::tokenize($tokenize);
     }
 
     /**

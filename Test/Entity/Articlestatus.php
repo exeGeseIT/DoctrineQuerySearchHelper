@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ExeGeseIT\Test\Entity;
 
-use ExeGeseIT\Test\Repository\ArticlestatusRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use ExeGeseIT\Test\Repository\ArticlestatusRepository;
 
 #[ORM\Table(name: 'articlestatus')]
 #[ORM\Entity(repositoryClass: ArticlestatusRepository::class)]

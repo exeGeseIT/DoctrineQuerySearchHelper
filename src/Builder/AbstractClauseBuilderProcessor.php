@@ -13,7 +13,8 @@ use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
  * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
  *
  * @phpstan-import-type TSearch from SearchHelper
- * @phpstan-import-type TSort from SearchHelper
+ * @phpstan-import-type TWhere  from SearchHelper
+ * @phpstan-import-type TSort   from SearchHelper
  */
 abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
 {
@@ -112,5 +113,36 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
         }
 
         return $tSorts;
+    }
+
+    /**
+     * @param TSearch|null $search
+     *
+     * @return array{0: array<string, list<TWhere>>, 1: array<string, array<string, list<TWhere>>>}|null
+     */
+    protected function getWhereFilters(?array $search): ?array
+    {
+        $clauseFilters = SearchHelper::parseSearchParameters($this->getSearchFilters($search));
+
+        if ([] === $clauseFilters) {
+            return null;
+        }
+
+        /** @var array<string, list<TWhere>|array<string, list<TWhere>>> $whereFilters */
+        $whereFilters = $clauseFilters;
+        $compositeWhereFilters = [];
+        foreach ($clauseFilters as $searchKey => $filters) {
+            if (!array_key_exists($searchKey, $this->searchFields)) {
+                $compositeWhereFilters[$searchKey] = $filters;
+                unset($whereFilters[$searchKey]);
+            }
+        }
+
+        return [$whereFilters, $compositeWhereFilters];
+    }
+
+    protected function getToken(): string
+    {
+        return bin2hex(random_bytes(15));
     }
 }

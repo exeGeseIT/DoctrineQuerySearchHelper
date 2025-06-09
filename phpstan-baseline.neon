@@ -1,2 +1,19 @@
 parameters:
-    ignoreErrors: 
+	ignoreErrors:
+		-
+			message: '#^Method ExeGeseIT\\DoctrineQuerySearchHelper\\Builder\\AbstractClauseBuilderProcessor\:\:getWhereFilters\(\) should return array\{array\<string, list\<array\{expFn\: ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn, value\: float\|int\|list\<float\|int\|string\>\|string\}\>\>, array\<string, array\<string, list\<array\{expFn\: ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn, value\: float\|int\|list\<float\|int\|string\>\|string\}\>\>\>\}\|null but returns array\{array\<string, array\<int\<0, max\>\|string, array\<''expFn''\|''value''\|int\<0, max\>, array\<''expFn''\|''value''\|int\<0, max\>, ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string\>\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|string\>\>\>, array\<string, array\<int\<0, max\>\|string, array\<''expFn''\|''value''\|int\<0, max\>, array\<''expFn''\|''value''\|int\<0, max\>, ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string\>\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|string\>\>\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Builder/AbstractClauseBuilderProcessor.php
+
+		-
+			message: '#^Parameter \#2 \$value of static method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:processFilter\(\) expects float\|int\|list\<float\|int\|string\>\|string, array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/SearchHelper.php
+
+		-
+			message: '#^Parameter &\$clauseFilters by\-ref type of method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:addCompositeClauseFilter\(\) expects array\<string, array\<int\<0, max\>\|string, array\<''expFn''\|''value''\|int\<0, max\>, array\<''expFn''\|''value''\|int\<0, max\>, ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string\>\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|string\>\>\>, non\-empty\-array\<string, array\<int\<0, max\>\|string, array\<int\<0, max\>\|string, array\<''expFn''\|''value''\|int\<0, max\>, array\<''expFn''\|''value''\|int\<0, max\>, ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string\>\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|string\>\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|string\>\>\> given\.$#'
+			identifier: parameterByRef.type
+			count: 1
+			path: src/SearchHelper.php

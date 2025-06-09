@@ -9,10 +9,16 @@ use Doctrine\ORM\Query\Expr\Composite;
 use Doctrine\ORM\Query\Expr\OrderBy;
 use Doctrine\ORM\Query\Expr\Orx;
 use Doctrine\ORM\QueryBuilder;
+use ExeGeseIT\DoctrineQuerySearchHelper\FilterExprFn;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
 
 /**
+ * Constructeur de clauses DQL pour la construction de requêtes Doctrine.
+ *
+ * Cette classe permet de construire dynamiquement des clauses WHERE et ORDER BY
+ * en se basant sur les critères de recherche fournis.
+ *
  * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
  *
  * @phpstan-import-type TSearch from SearchHelper
@@ -37,50 +43,32 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
     }
 
     /**
-     * @  param array<string, TWhere[]|array<string, array<string, TWhere[]>>> $whereFilters
-     *
-     * @  param array<string, string>                                          $fields
-     */
-    /**
      * @param TSearch|null $search
      */
     private function setDQLWhereClause(?array $search): void
     {
-        $whereFilters = SearchHelper::parseSearchParameters($this->getSearchFilters($search));
+        $whereClauses = $this->getWhereFilters($search);
 
-        if ([] === $whereFilters) {
+        if (null === $whereClauses) {
             return;
         }
 
-        $compositeWhereFilters = [];
-        foreach ($whereFilters as $searchKey => $filters) {
-            if (!array_key_exists($searchKey, $this->searchFields)) {
-                $m = SearchFilter::decodeSearchfilter($searchKey);
-                $COMPPKey = SearchFilter::normalize($m['filter']);
+        [$whereFilters, $compositeWhereFilters] = $whereClauses;
 
-                $compositeWhereFilters = [
-                    ...$compositeWhereFilters,
-                    ...[
-                        $COMPPKey => $filters,
-                    ],
-                ];
-                unset($whereFilters[$searchKey]);
-                continue;
-            }
-        }
-
-        // error_log(\Symfony\Component\VarExporter\VarExporter::export($compositeWhereFilters));
         foreach ($this->searchFields as $searchKey => $field) {
             if (!isset($whereFilters[$searchKey])) {
                 continue;
             }
 
+            /**
+             * @var TWhere $criteria
+             */
             foreach ($whereFilters[$searchKey] as $index => $criteria) {
                 $_searchKey = sprintf('%s_i%d', $searchKey, $index);
                 $expFn = $criteria['expFn'];
                 $_value = $criteria['value'];
 
-                if (!in_array($expFn, ['in', 'notIn']) && is_array($_value)) {
+                if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($_value)) {
                     $i = 0;
                     $orStatements = $this->queryBuilder->expr()->orX();
                     foreach ($_value as $pattern) {
@@ -88,13 +76,13 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
                         $orStatements->add(
                             $this->queryBuilder
                                 ->setParameter($parameter, $pattern)
-                                ->expr()->{$expFn}($field, ':' . $parameter)
+                                ->expr()->{$expFn->value()}($field, ':' . $parameter)
                         );
                     }
 
                     $this->queryBuilder->andWhere($orStatements);
                 } else {
-                    $this->queryBuilder->andWhere($this->queryBuilder->expr()->{$expFn}($field, ':' . $_searchKey));
+                    $this->queryBuilder->andWhere($this->queryBuilder->expr()->{$expFn->value()}($field, ':' . $_searchKey));
 
                     if (SearchHelper::NULL_VALUE !== $_value) {
                         $this->queryBuilder->setParameter($_searchKey, $_value);
@@ -103,26 +91,27 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
             }
         }
 
-        // @phpstan-ignore argument.type
         $this->addCompositeParts($compositeWhereFilters);
     }
 
     /**
-     * @param array<string, array<string, TWhere[]>> $compositeWhereFilters
+     * @param array<string, array<string, list<TWhere>>> $compositeWhereFilters
      */
     private function addCompositeParts(array $compositeWhereFilters): void
     {
         $iteration = 0;
 
-        foreach ($compositeWhereFilters as $COMPPKey => $compositCOMPPKey) {
+        foreach ($compositeWhereFilters as $encodedCompositeKey => $compositeFilters) {
             ++$iteration;
 
-            // error_log(\Symfony\Component\VarExporter\VarExporter::export([$COMPPKey => $compositCOMPPKey]));
-            if (!in_array($COMPPKey, SearchFilter::COMPOSITE_FILTERS)) {
+            $demuxedFilter = SearchFilter::decodeSearchfilter($encodedCompositeKey);
+            $compositeFilterKey = $demuxedFilter['filter'];
+
+            if (!SearchFilter::isCompositeFilter($compositeFilterKey)) {
                 continue;
             }
 
-            [$radicalKey, $compositePartAdder, $compositeClass] = match ($COMPPKey) {
+            [$radicalKey, $compositePartAdder, $compositeClass] = match ($compositeFilterKey) {
                 // .. AND (field1 ... OR field2 ...)
                 SearchFilter::COMPOSITE_AND_OR => ['ANDOR', 'andWhere', Orx::class],
                 // .. OR (field1 ... AND field2 ...)
@@ -131,17 +120,17 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
                 default => ['AND', 'andWhere', Andx::class],
             };
 
-            $radical = sprintf('%s%d_%s', $radicalKey, $iteration, bin2hex(random_bytes(15)));
+            $radical = sprintf('%s%d_%s', $radicalKey, $iteration, $this->getToken());
 
-            if (($CompositeStatement = $this->getCompositeDQLStatement($compositCOMPPKey, $radical, $compositeClass)) instanceof Composite) {
+            if (($CompositeStatement = $this->getCompositeDQLStatement($compositeFilters, $radical, $compositeClass)) instanceof Composite) {
                 $this->queryBuilder->{$compositePartAdder}($CompositeStatement);
             }
         }
     }
 
     /**
-     * @param array<string, TWhere[]> $compositeFilters
-     * @param class-string<Andx|Orx>  $compositeClass
+     * @param array<string, list<TWhere>> $compositeFilters
+     * @param class-string<Andx|Orx>      $compositeClass
      */
     private function getCompositeDQLStatement(array $compositeFilters, string $radical, string $compositeClass): ?Composite
     {
@@ -168,7 +157,7 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
                 $expFn = $criteria['expFn'];
                 $_value = $criteria['value'];
 
-                if (!in_array($expFn, ['in', 'notIn']) && is_array($_value)) {
+                if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($_value)) {
                     $i = 0;
                     $orStatements = $this->queryBuilder->expr()->orX();
                     foreach ($_value as $pattern) {
@@ -176,14 +165,14 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
                         $orStatements->add(
                             $this->queryBuilder
                                 ->setParameter($parameter, $pattern)
-                                ->expr()->{$expFn}($field, ':' . $parameter)
+                                ->expr()->{$expFn->value()}($field, ':' . $parameter)
                         );
                     }
 
                     $CompositeStatement->add($orStatements);
                 } else {
                     $CompositeStatement->add(
-                        $this->queryBuilder->expr()->{$expFn}($field, ':' . $_searchKey)
+                        $this->queryBuilder->expr()->{$expFn->value()}($field, ':' . $_searchKey)
                     );
 
                     if (SearchHelper::NULL_VALUE !== $_value) {

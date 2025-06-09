@@ -1,32 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ExeGeseIT\Test\Repository;
 
-use ExeGeseIT\Test\Entity\Article;
+use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
-use Doctrine\Persistence\ManagerRegistry;
 use ExeGeseIT\DoctrineQuerySearchHelper\QueryClauseBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
-use Doctrine\ORM\EntityRepository;
+use ExeGeseIT\Test\Entity\Article;
 
 /**
  * @extends EntityRepository<Article>
- *
- * @method Article|null find($id, $lockMode = null, $lockVersion = null)
- * @method Article|null findOneBy(array $criteria, array $orderBy = null)
- * @method Article[]    findAll()
- * @method Article[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  *
  * @phpstan-import-type TSearch from SearchHelper
  */
 class ArticleRepository extends EntityRepository
 {
-//    public function __construct(ManagerRegistry $managerRegistry)
-//    {
-//        parent::__construct($managerRegistry, Article::class);
-//    }
-    
-
     /**
      * @param TSearch $search
      */

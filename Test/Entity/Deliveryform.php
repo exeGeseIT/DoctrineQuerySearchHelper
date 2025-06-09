@@ -1,17 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ExeGeseIT\Test\Entity;
 
-use ExeGeseIT\Test\Repository\DeliveryformRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use ExeGeseIT\Test\Repository\DeliveryformRepository;
 
 #[ORM\Entity(repositoryClass: DeliveryformRepository::class)]
 #[ORM\Table(name: 'deliveryform')]
-class Deliveryform 
+class Deliveryform implements \Stringable
 {
+    public $emaill;
+
+    public $size;
+
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'IDENTITY')]
     #[ORM\Column(name: 'iddeliveryform', type: Types::INTEGER)]

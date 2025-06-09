@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ExeGeseIT\Test\Entity;
 
-use ExeGeseIT\Test\Repository\ArticleRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use ExeGeseIT\Test\Repository\ArticleRepository;
 
 #[ORM\Entity(repositoryClass: ArticleRepository::class)]
 #[ORM\Table(name: 'article')]
-class Article 
+class Article implements \Stringable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'IDENTITY')]

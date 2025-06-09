@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Doctrine\DBAL\Query\QueryBuilder;
+use ExeGeseIT\DoctrineQuerySearchHelper\FilterExprFn;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
 
@@ -40,40 +41,28 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
      */
     private function setDBALWhereClause(?array $search): void
     {
-        $whereFilters = SearchHelper::parseSearchParameters($this->getSearchFilters($search));
+        $whereClauses = $this->getWhereFilters($search);
 
-        if ([] === $whereFilters) {
+        if (null === $whereClauses) {
             return;
         }
 
-        $compositeWhereFilters = [];
-        foreach ($whereFilters as $searchKey => $filters) {
-            if (!array_key_exists($searchKey, $this->searchFields)) {
-                $m = SearchFilter::decodeSearchfilter($searchKey);
-                $COMPPKey = SearchFilter::normalize($m['filter']);
-
-                $compositeWhereFilters = [
-                    ...$compositeWhereFilters,
-                    ...[
-                        $COMPPKey => $filters,
-                    ],
-                ];
-                unset($whereFilters[$searchKey]);
-                continue;
-            }
-        }
+        [$whereFilters, $compositeWhereFilters] = $whereClauses;
 
         foreach ($this->searchFields as $searchKey => $field) {
             if (!isset($whereFilters[$searchKey])) {
                 continue;
             }
 
+            /**
+             * @var TWhere $criteria
+             */
             foreach ($whereFilters[$searchKey] as $index => $criteria) {
                 $_searchKey = sprintf('%s_i%d', $searchKey, $index);
                 $expFn = $criteria['expFn'];
                 $_value = $criteria['value'];
 
-                if (!in_array($expFn, ['in', 'notIn']) && is_array($_value)) {
+                if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($_value)) {
                     $i = 0;
                     $pattern = array_shift($_value);
                     $parameter = sprintf('%s_%d', $_searchKey, $i++);
@@ -81,7 +70,7 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
                     /** @var CompositeExpression $compositeExpression */
                     $compositeExpression = $this->queryBuilder
                         ->setParameter($parameter, $pattern)
-                        ->expr()->{$expFn}($field, ':' . $parameter);
+                        ->expr()->{$expFn->value()}($field, ':' . $parameter);
                     $orStatements = $this->queryBuilder->expr()->or($compositeExpression);
 
                     foreach ($_value as $_pattern) {
@@ -90,14 +79,14 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
                         /** @var CompositeExpression $_compositeExpression */
                         $_compositeExpression = $this->queryBuilder
                             ->setParameter($parameter, $_pattern)
-                            ->expr()->{$expFn}($field, ':' . $parameter);
+                            ->expr()->{$expFn->value()}($field, ':' . $parameter);
                         $orStatements = $orStatements->with($compositeExpression);
                     }
 
                     $this->queryBuilder->andWhere($orStatements);
                 } else {
                     /** @var CompositeExpression $compositeExpression */
-                    $compositeExpression = $this->queryBuilder->expr()->{$expFn}($field, ':' . $_searchKey);
+                    $compositeExpression = $this->queryBuilder->expr()->{$expFn->value()}($field, ':' . $_searchKey);
                     $this->queryBuilder->andWhere($compositeExpression);
 
                     if (SearchHelper::NULL_VALUE !== $_value) {
@@ -113,26 +102,28 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
             }
         }
 
-        // @phpstan-ignore argument.type
         $this->addCompositeDBALParts($compositeWhereFilters);
     }
 
     /**
-     * @param array<string, array<string, TWhere[]>> $compositeWhereFilters
+     * @param array<string, array<string, list<TWhere>>> $compositeWhereFilters
      */
     private function addCompositeDBALParts(array $compositeWhereFilters): void
     {
         $iteration = 0;
 
-        /** @ var array<string, TWhere[]> $compositCOMPPKey */
-        foreach ($compositeWhereFilters as $COMPPKey => $compositCOMPPKey) {
+        /** @ var array<string, TWhere[]> $compositeFilters */
+        foreach ($compositeWhereFilters as $encodedCompositeKey => $compositeFilters) {
             ++$iteration;
 
-            if (!in_array($COMPPKey, SearchFilter::COMPOSITE_FILTERS)) {
+            $demuxedFilter = SearchFilter::decodeSearchfilter($encodedCompositeKey);
+            $compositeFilterKey = $demuxedFilter['filter'];
+
+            if (!SearchFilter::isCompositeFilter($compositeFilterKey)) {
                 continue;
             }
 
-            [$radicalKey, $compositePartAdder, $compositeType] = match ($COMPPKey) {
+            [$radicalKey, $compositePartAdder, $compositeType] = match ($compositeFilterKey) {
                 // .. AND (field1 ... OR field2 ...)
                 SearchFilter::COMPOSITE_AND_OR => ['ANDOR', 'andWhere', CompositeExpression::TYPE_OR],
                 // .. OR (field1 ... AND field2 ...)
@@ -143,14 +134,14 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
 
             $radical = sprintf('%s%d_%s', $radicalKey, $iteration, bin2hex(random_bytes(15)));
 
-            if (($ANDStatements = $this->getCompositeDBALStatement($compositCOMPPKey, $radical, $compositeType)) instanceof CompositeExpression) {
-                $this->queryBuilder->{$compositeType}($ANDStatements);
+            if (($ANDStatements = $this->getCompositeDBALStatement($compositeFilters, $radical, $compositeType)) instanceof CompositeExpression) {
+                $this->queryBuilder->{$compositePartAdder}($ANDStatements);
             }
         }
     }
 
     /**
-     * @param array<string, TWhere[]>     $compositeFilters
+     * @param array<string, list<TWhere>> $compositeFilters
      * @param CompositeExpression::TYPE_* $compositeType
      */
     private function getCompositeDBALStatement(array $compositeFilters, string $radical, string $compositeType): ?CompositeExpression
@@ -173,7 +164,7 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
                 $expFn = $criteria['expFn'];
                 $_value = $criteria['value'];
 
-                if (!in_array($expFn, ['in', 'notIn']) && is_array($_value)) {
+                if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($_value)) {
                     $i = 0;
                     $pattern = array_shift($_value);
                     $parameter = sprintf('%s_%d', $_searchKey, $i++);
@@ -181,7 +172,7 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
                     /** @var CompositeExpression $compositeExpression */
                     $compositeExpression = $this->queryBuilder
                         ->setParameter($parameter, $pattern)
-                        ->expr()->{$expFn}($field, ':' . $parameter);
+                        ->expr()->{$expFn->value()}($field, ':' . $parameter);
                     $orStatements = $this->queryBuilder->expr()->or($compositeExpression);
 
                     foreach ($_value as $_pattern) {
@@ -190,14 +181,14 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
                         /** @var CompositeExpression $_compositeExpression */
                         $_compositeExpression = $this->queryBuilder
                             ->setParameter($parameter, $_pattern)
-                            ->expr()->{$expFn}($field, ':' . $parameter);
+                            ->expr()->{$expFn->value()}($field, ':' . $parameter);
                         $orStatements = $orStatements->with($_compositeExpression);
                     }
 
                     $CompositeStatement = $CompositeStatement->with($orStatements);
                 } else {
                     /** @var CompositeExpression $compositeExpression */
-                    $compositeExpression = $this->queryBuilder->expr()->{$expFn}($field, ':' . $_searchKey);
+                    $compositeExpression = $this->queryBuilder->expr()->{$expFn->value()}($field, ':' . $_searchKey);
                     $CompositeStatement = $CompositeStatement->with($compositeExpression);
 
                     if (SearchHelper::NULL_VALUE !== $_value) {

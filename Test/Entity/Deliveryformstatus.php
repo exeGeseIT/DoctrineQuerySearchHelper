@@ -1,24 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ExeGeseIT\Test\Entity;
 
-use ExeGeseIT\Test\Repository\DeliveryformstatusRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use ExeGeseIT\Test\Repository\DeliveryformstatusRepository;
 
 #[ORM\Entity(repositoryClass: DeliveryformstatusRepository::class)]
 #[ORM\Table(name: 'deliveryformstatus')]
 class Deliveryformstatus implements \Stringable
 {
     final public const WAITING = 'WAITING';
+
     // # AFTER PREPARATION STEP
     final public const PARTIAL = 'PARTIAL';
     final public const MISSING = 'MISSING';
     final public const PREPARED = 'PREPARED';
+
     // # AFTER LOADING STEP
     final public const DOCKED = 'DOCKED';
     final public const LOADED = 'LOADED';
     final public const RECEIPT_SIGNING = 'RECEIPT_SIGNING';
+
     // # AFTER DELIVERING STEP
     final public const ABSENT = 'ABSENT';
     final public const DELIVERED = 'DELIVERED';

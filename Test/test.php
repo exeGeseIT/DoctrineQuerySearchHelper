@@ -52,6 +52,7 @@ $searchData = [
         SearchFilter::equal('deliveryformStatus') => Deliveryformstatus::DOCKED,
         SearchFilter::equal('isremoval') => false,
     ],
+    SearchFilter::filter('idarticle') => null,
 
 ];
 

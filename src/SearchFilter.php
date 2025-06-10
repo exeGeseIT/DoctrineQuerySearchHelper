@@ -9,6 +9,7 @@ namespace ExeGeseIT\DoctrineQuerySearchHelper;
  */
 final class SearchFilter
 {
+    public const FILTER = '?';
     public const EQUAL = '=';
     public const NOT_EQUAL = '!';
     public const LIKE = '%';
@@ -31,16 +32,6 @@ final class SearchFilter
             self::COMPOSITE_AND,
             self::COMPOSITE_OR,
             self::COMPOSITE_AND_OR,
-        ]);
-    }
-
-    public static function isLaxeFilter(string $filter): bool
-    {
-        return in_array($filter, [
-            self::NULL,
-            self::NOT_NULL,
-            self::EQUAL,
-            self::NOT_EQUAL,
         ]);
     }
 
@@ -135,14 +126,14 @@ final class SearchFilter
     }
 
     /**
-     * isset($value)  ? => ...WHERE {{ searchKey = $value }}
-     * !isset($value) ? => ...WHERE {{ 1 }}.
+     * !empty($value)  ? => ...WHERE {{ searchKey = $value }}
+     * empty($value) ? => ...WHERE {{ 1 }}.
      *
      * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
     public static function filter(string $searchKey, bool $tokenize = true): string
     {
-        return trim($searchKey) . self::tokenize($tokenize);
+        return self::FILTER . trim($searchKey) . self::tokenize($tokenize);
     }
 
     /**

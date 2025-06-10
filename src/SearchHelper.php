@@ -125,7 +125,7 @@ final class SearchHelper
 
     private function isEmptyValue(mixed $value): bool
     {
-        return null === $value || '' === $value || [] === $value || false === $value;
+        return null === $value || '' === $value || [] === $value || 0 === $value || false === $value;
     }
 
     /**
@@ -135,7 +135,7 @@ final class SearchHelper
      */
     private function processFilter(string $filter, mixed $value): ?array
     {
-        if ($this->isEmptyValue($value) && !SearchFilter::isLaxeFilter($filter)) {
+        if ($this->isEmptyValue($value) && (SearchFilter::FILTER === $filter)) {
             return null;
         }
 

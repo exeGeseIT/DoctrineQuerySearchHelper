@@ -176,8 +176,8 @@ class SomeController
 
 ```php
 /**
- * isset($value)  ? => ...WHERE {{ searchKey = $value }}
- * !isset($value) ? => ...WHERE {{ 1 }}
+ * !empty($value) ? => ...WHERE {{ searchKey = $value }}
+ * empty($value)  ? => ...WHERE {{ 1 }}
  * 
  * @param string $searchKey
  * @param bool $tokenize  if TRUE "~<random_hash>" is added to ensure uniqueness

@@ -127,7 +127,7 @@ final class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ OR ( .. AND .. AND ..) }}.
+     *    {{ OR ( .. AND .. AND ..) }}
      */
     public static function or(): string
     {
@@ -180,7 +180,7 @@ final class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey NOT LIKE $value.
+     *    {{ AND searchKey NOT LIKE $value }}
      *
      * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
@@ -219,7 +219,7 @@ final class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey IS NULL.
+     *    {{ AND searchKey IS NULL }}
      *
      * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
@@ -230,7 +230,7 @@ final class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey IS NOT NULL.
+     *    {{ AND searchKey IS NOT NULL }}
      *
      * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
@@ -241,7 +241,7 @@ final class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey > $value.
+     *    {{ AND searchKey > $value }}
      *
      * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
@@ -252,7 +252,7 @@ final class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey >= $value.
+     *    {{ AND searchKey >= $value }}
      *
      * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */
@@ -263,7 +263,7 @@ final class SearchFilter
 
     /**
      * ...WHERE 1
-     *    {{ AND searchKey < $value.
+     *    {{ AND searchKey < $value }}
      *
      * @param bool $tokenize if TRUE, a random hash is added to the returned string to ensure its uniqueness.
      */

@@ -58,14 +58,18 @@ $searchData = [
 
 echo VarExporter::export($searchData);
 echo "\n";
-echo SearchHelper::dumpParsedSearchParameters($searchData, pretty: true);
+// echo SearchHelper::dumpParsedSearchParameters($searchData, pretty: true);
 echo "\n";
 
 /** @var Querybuilder $queryBuilder */
 $queryBuilder = $entityManager->getRepository(Article::class)->fetchArticleQb($searchData);
-echo "\n";
-echo (new SqlFormatter(new NullHighlighter()))->format($queryBuilder->getQuery()->getSQL());
-echo "\n";
+$sql = $queryBuilder->getQuery()->getSQL();
+
+if (preg_match('/WHERE(.+)$/s', $sql, $matches)) {
+    echo "\n";
+    echo (new SqlFormatter(new NullHighlighter()))->format("... WHERE" . $matches[1]);
+    echo "\n";
+}
 
 // expects array<string, array<array<string, array<array{expFn: string, value: array<int, int|string>|bool|float|int|string}|int|string>|bool|float|int|string>>>
 // given   array<string, array<int|string, array<array<int|string, array<array{expFn: string, value: array<int, int|string>|bool|float|int|string}|int|string>|bool|float|int|string>|float|int|string>>>

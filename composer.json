@@ -31,8 +31,8 @@
         "cs:phpstan:cache:clear-result": "@php vendor/bin/phpstan clear-result-cache --ansi",
         "cs:rector": "@php vendor/bin/rector --dry-run --ansi",
         "cs:rector:fix": "@php vendor/bin/rector process --ansi",
-        "cs:ecs": "@php vendor/bin/ecs check",
-        "cs:ecs:fix": "@php vendor/bin/ecs check --fix"
+        "cs:ecs": "@php vendor/bin/ecs check --ansi",
+        "cs:ecs:fix": "@php vendor/bin/ecs check --fix --ansi"
     },
     "config": {
         "allow-plugins": {

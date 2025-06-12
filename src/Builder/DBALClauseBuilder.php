@@ -13,6 +13,9 @@ use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
 
 /**
+ * Cette classe permet de construire dynamiquement des clauses WHERE et ORDER BY
+ * en se basant sur les critères de recherche fournis.
+ *
  * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
  *
  * @phpstan-import-type TSearch from SearchHelper
@@ -48,157 +51,193 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
         }
 
         [$whereFilters, $compositeWhereFilters] = $whereClauses;
+        $this->processSimpleWhereFilters($whereFilters);
+        $this->processCompositeWhereFilters($compositeWhereFilters);
+    }
 
-        foreach ($this->searchFields as $searchKey => $field) {
-            if (!isset($whereFilters[$searchKey])) {
+    /**
+     * @param array<string, list<TWhere>> $whereFilters
+     */
+    private function processSimpleWhereFilters(array $whereFilters): void
+    {
+        foreach ($whereFilters as $searchKey => $whereFilter) {
+            $field = $this->searchFields[$searchKey] ?? null;
+
+            if (null === $field) {
+                continue;
+            }
+
+            foreach ($whereFilter as $index => $criteria) {
+                $parameterKey = sprintf('%s_i%d', $searchKey, $index);
+                $this->addWhereCondition($field, $parameterKey, $criteria);
+            }
+        }
+    }
+
+    /**
+     * @param TWhere $criteria
+     */
+    private function addWhereCondition(string $field, string $parameterKey, array $criteria): void
+    {
+        $expFn = $criteria['expFn'];
+        $value = $criteria['value'];
+
+        if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($value)) {
+            $this->handleArrayValue($field, $parameterKey, $expFn, $value);
+        } else {
+            $this->handleSingleValue($field, $parameterKey, $expFn, $value);
+        }
+    }
+
+    /**
+     * @param list<int|float|string> $values
+     */
+    private function handleArrayValue(string $field, string $parameterKey, FilterExprFn $filterExprFn, array $values): void
+    {
+        $orx = null;
+        foreach ($values as $i => $value) {
+            $parameter = sprintf('%s_%d', $parameterKey, $i);
+
+            /** @var CompositeExpression $compositeExpression */
+            $compositeExpression = $this->queryBuilder
+                ->setParameter($parameter, $value)
+                ->expr()->{$filterExprFn->value()}($field, ':' . $parameter)
+            ;
+
+            if (!$orx instanceof CompositeExpression) {
+                $orx = $this->queryBuilder->expr()->or($compositeExpression);
+                continue;
+            }
+
+            $orx = $orx->with($compositeExpression);
+        }
+
+        if ($orx instanceof CompositeExpression) {
+            $this->queryBuilder->andWhere($orx);
+        }
+    }
+
+    private function handleSingleValue(string $field, string $parameterKey, FilterExprFn $filterExprFn, mixed $value): void
+    {
+        /** @var CompositeExpression $compositeExpression */
+        $compositeExpression = $this->queryBuilder->expr()->{$filterExprFn->value()}($field, ':' . $parameterKey);
+        $this->queryBuilder->andWhere($compositeExpression);
+
+        if (SearchHelper::NULL_VALUE !== $value) {
+            $typeValue = match (true) {
+                !is_array($value) => ParameterType::STRING,
+                is_int($value[0]) => ArrayParameterType::INTEGER,
+                default => ArrayParameterType::STRING,
+            };
+
+            $this->queryBuilder->setParameter($parameterKey, $value, $typeValue);
+        }
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $compositeWhereFilters
+     */
+    private function processCompositeWhereFilters(array $compositeWhereFilters): void
+    {
+        foreach ($compositeWhereFilters as $encodedCompositeKey => $compositeFilters) {
+            $this->addCompositePart($encodedCompositeKey, $compositeFilters);
+        }
+    }
+
+    /**
+     * array<string, list<TWhere>|array<string, list<TWhere>> $compositeFilters.
+     *
+     * @param array<string, mixed> $compositeFilters
+     */
+    private function addCompositePart(string $encodedCompositeKey, array $compositeFilters): void
+    {
+        $demuxedFilter = SearchFilter::decodeSearchfilter($encodedCompositeKey);
+        $compositeFilterKey = $demuxedFilter['filter'];
+
+        $compositePartAdder = match ($compositeFilterKey) {
+            SearchFilter::COMPOSITE_AND_OR => 'andWhere',
+            SearchFilter::COMPOSITE_OR => 'orWhere',
+            default => 'andWhere',
+        };
+
+        $compositeExpression = $this->getCompositeDBALStatement($encodedCompositeKey, $compositeFilters);
+        $this->queryBuilder->{$compositePartAdder}($compositeExpression);
+    }
+
+    /**
+     * array<string, list<TWhere>|array<string, list<TWhere>> $compositeFilters.
+     *
+     * @param array<string, mixed> $compositeFilters
+     */
+    private function getCompositeDBALStatement(string $encodedCompositeKey, array $compositeFilters): CompositeExpression
+    {
+        $demuxedFilter = SearchFilter::decodeSearchfilter($encodedCompositeKey);
+        $compositeFilterKey = $demuxedFilter['filter'];
+        $token = $demuxedFilter['key'];
+
+        [$radicalKey, $CompositeStatement] = match ($compositeFilterKey) {
+            // .. AND (field1 ... OR field2 ...)
+            SearchFilter::COMPOSITE_AND_OR => ['ANDOR', $this->queryBuilder->expr()->or('1=0')],
+            // .. OR (field1 ... AND field2 ...)
+            SearchFilter::COMPOSITE_OR => ['OR', $this->queryBuilder->expr()->and('1=1')],
+            // SearchFilter::COMPOSITE_AND = .. AND (field1 ... AND field2 ...)
+            default => ['AND', $this->queryBuilder->expr()->and('1=1')],
+        };
+
+        $radical = sprintf('%s%s_%s', $radicalKey, $token, $this->getToken());
+
+        foreach ($compositeFilters as $searchKey => $stack) {
+            $field = $this->searchFields[$searchKey] ?? null;
+
+            if (null === $field) {
+                /** @var array<string, mixed> $stack */
+                $CompositeStatement->with($this->getCompositeDBALStatement($searchKey, $stack));
                 continue;
             }
 
             /**
-             * @var TWhere $criteria
+             * @var list<TWhere> $stack
              */
-            foreach ($whereFilters[$searchKey] as $index => $criteria) {
-                $_searchKey = sprintf('%s_i%d', $searchKey, $index);
+            foreach ($stack as $index => $criteria) {
+                $_searchKey = sprintf('%s_%s_i%d', $radical, $searchKey, $index);
                 $expFn = $criteria['expFn'];
-                $_value = $criteria['value'];
+                $value = $criteria['value'];
 
-                if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($_value)) {
-                    $i = 0;
-                    $pattern = array_shift($_value);
-                    $parameter = sprintf('%s_%d', $_searchKey, $i++);
+                if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($value)) {
+                    $orStatements = null;
+                    foreach ($value as $i => $pattern) {
+                        $parameter = sprintf('%s_%d', $_searchKey, $i);
 
-                    /** @var CompositeExpression $compositeExpression */
-                    $compositeExpression = $this->queryBuilder
-                        ->setParameter($parameter, $pattern)
-                        ->expr()->{$expFn->value()}($field, ':' . $parameter);
-                    $orStatements = $this->queryBuilder->expr()->or($compositeExpression);
+                        /** @var CompositeExpression $compositeExpression */
+                        $compositeExpression = $this->queryBuilder
+                            ->setParameter($parameter, $pattern)
+                            ->expr()->{$expFn->value()}($field, ':' . $parameter)
+                        ;
 
-                    foreach ($_value as $_pattern) {
-                        $parameter = sprintf('%s_%d', $_searchKey, $i++);
+                        if (!$orStatements instanceof CompositeExpression) {
+                            $orStatements = $this->queryBuilder->expr()->or($compositeExpression);
+                            continue;
+                        }
 
-                        /** @var CompositeExpression $_compositeExpression */
-                        $_compositeExpression = $this->queryBuilder
-                            ->setParameter($parameter, $_pattern)
-                            ->expr()->{$expFn->value()}($field, ':' . $parameter);
                         $orStatements = $orStatements->with($compositeExpression);
                     }
 
-                    $this->queryBuilder->andWhere($orStatements);
-                } else {
-                    /** @var CompositeExpression $compositeExpression */
-                    $compositeExpression = $this->queryBuilder->expr()->{$expFn->value()}($field, ':' . $_searchKey);
-                    $this->queryBuilder->andWhere($compositeExpression);
-
-                    if (SearchHelper::NULL_VALUE !== $_value) {
-                        $_typeValue = ParameterType::STRING;
-
-                        if (is_array($_value)) {
-                            $_typeValue = is_int($_value[0]) ? ArrayParameterType::INTEGER : ArrayParameterType::STRING;
-                        }
-
-                        $this->queryBuilder->setParameter($_searchKey, $_value, $_typeValue);
+                    if ($orStatements instanceof CompositeExpression) {
+                        $CompositeStatement = $CompositeStatement->with($orStatements);
                     }
-                }
-            }
-        }
-
-        $this->addCompositeDBALParts($compositeWhereFilters);
-    }
-
-    /**
-     * @param array<string, array<string, list<TWhere>>> $compositeWhereFilters
-     */
-    private function addCompositeDBALParts(array $compositeWhereFilters): void
-    {
-        $iteration = 0;
-
-        /** @ var array<string, TWhere[]> $compositeFilters */
-        foreach ($compositeWhereFilters as $encodedCompositeKey => $compositeFilters) {
-            ++$iteration;
-
-            $demuxedFilter = SearchFilter::decodeSearchfilter($encodedCompositeKey);
-            $compositeFilterKey = $demuxedFilter['filter'];
-
-            if (!SearchFilter::isCompositeFilter($compositeFilterKey)) {
-                continue;
-            }
-
-            [$radicalKey, $compositePartAdder, $compositeType] = match ($compositeFilterKey) {
-                // .. AND (field1 ... OR field2 ...)
-                SearchFilter::COMPOSITE_AND_OR => ['ANDOR', 'andWhere', CompositeExpression::TYPE_OR],
-                // .. OR (field1 ... AND field2 ...)
-                SearchFilter::COMPOSITE_OR => ['OR', 'orWhere', CompositeExpression::TYPE_AND],
-                // SearchFilter::COMPOSITE_AND = .. AND (field1 ... AND field2 ...)
-                default => ['AND', 'andWhere', CompositeExpression::TYPE_AND],
-            };
-
-            $radical = sprintf('%s%d_%s', $radicalKey, $iteration, bin2hex(random_bytes(15)));
-
-            if (($ANDStatements = $this->getCompositeDBALStatement($compositeFilters, $radical, $compositeType)) instanceof CompositeExpression) {
-                $this->queryBuilder->{$compositePartAdder}($ANDStatements);
-            }
-        }
-    }
-
-    /**
-     * @param array<string, list<TWhere>> $compositeFilters
-     * @param CompositeExpression::TYPE_* $compositeType
-     */
-    private function getCompositeDBALStatement(array $compositeFilters, string $radical, string $compositeType): ?CompositeExpression
-    {
-        $CompositeStatement = null;
-        foreach ($this->searchFields as $searchKey => $field) {
-            if (!isset($compositeFilters[$searchKey])) {
-                continue;
-            }
-
-            if (!$CompositeStatement instanceof CompositeExpression) {
-                $CompositeStatement = match ($compositeType) {
-                    CompositeExpression::TYPE_AND => $this->queryBuilder->expr()->and('1=1'),
-                    CompositeExpression::TYPE_OR => $this->queryBuilder->expr()->or('1=0'),
-                };
-            }
-
-            foreach ($compositeFilters[$searchKey] as $index => $criteria) {
-                $_searchKey = sprintf('%s_%s_i%d', $radical, $searchKey, $index);
-                $expFn = $criteria['expFn'];
-                $_value = $criteria['value'];
-
-                if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($_value)) {
-                    $i = 0;
-                    $pattern = array_shift($_value);
-                    $parameter = sprintf('%s_%d', $_searchKey, $i++);
-
-                    /** @var CompositeExpression $compositeExpression */
-                    $compositeExpression = $this->queryBuilder
-                        ->setParameter($parameter, $pattern)
-                        ->expr()->{$expFn->value()}($field, ':' . $parameter);
-                    $orStatements = $this->queryBuilder->expr()->or($compositeExpression);
-
-                    foreach ($_value as $_pattern) {
-                        $parameter = sprintf('%s_%d', $_searchKey, $i++);
-
-                        /** @var CompositeExpression $_compositeExpression */
-                        $_compositeExpression = $this->queryBuilder
-                            ->setParameter($parameter, $_pattern)
-                            ->expr()->{$expFn->value()}($field, ':' . $parameter);
-                        $orStatements = $orStatements->with($_compositeExpression);
-                    }
-
-                    $CompositeStatement = $CompositeStatement->with($orStatements);
                 } else {
                     /** @var CompositeExpression $compositeExpression */
                     $compositeExpression = $this->queryBuilder->expr()->{$expFn->value()}($field, ':' . $_searchKey);
                     $CompositeStatement = $CompositeStatement->with($compositeExpression);
 
-                    if (SearchHelper::NULL_VALUE !== $_value) {
-                        $_typeValue = ParameterType::STRING;
+                    if (SearchHelper::NULL_VALUE !== $value) {
+                        $typeValue = match (true) {
+                            !is_array($value) => ParameterType::STRING,
+                            is_int($value[0]) => ArrayParameterType::INTEGER,
+                            default => ArrayParameterType::STRING,
+                        };
 
-                        if (is_array($_value)) {
-                            $_typeValue = is_int($_value[0]) ? ArrayParameterType::INTEGER : ArrayParameterType::STRING;
-                        }
-
-                        $this->queryBuilder->setParameter($_searchKey, $_value, $_typeValue);
+                        $this->queryBuilder->setParameter($_searchKey, $value, $typeValue);
                     }
                 }
             }

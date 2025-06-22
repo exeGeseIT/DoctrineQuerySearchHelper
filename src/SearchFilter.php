@@ -95,7 +95,7 @@ final class SearchFilter
     {
         $filteredKey = self::getFilteredKey($searchKey, $searchParameters);
 
-        return null === $filteredKey || '' === $filteredKey || '0' === $filteredKey ? null : $searchParameters[$filteredKey];
+        return $searchParameters[$filteredKey] ?? null;
     }
 
     /**

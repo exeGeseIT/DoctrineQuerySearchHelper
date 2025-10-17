@@ -72,7 +72,7 @@ final class SearchHelper
         foreach ($stack as $searchedValue) {
             $strings[] = match ($strict) {
                 true => (string) $searchedValue,
-                default => sprintf('%%%s%%', str_replace(['%', '_'], ['\%', '\_'], trim(\mb_strtolower((string) $searchedValue)))),
+                default => sprintf('%%%s%%', str_replace(['%', '_', '\\'], ['\%', '\_', '\\\\'], trim(\mb_strtolower((string) $searchedValue)))),
             };
         }
 

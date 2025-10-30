@@ -51,6 +51,7 @@ class ArticleRepository extends EntityRepository
                 'referenceDeliveryform' => 'd.reference',
                 'externalrefDeliveryform' => 'd.externalref',
                 'referencearticle' => 'a.reference',
+                'dealer' => 'd.dealer',
             ])
         ;
 

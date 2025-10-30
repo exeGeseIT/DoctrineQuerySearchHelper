@@ -17,14 +17,14 @@ use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
 use ExeGeseIT\Test\Entity\Article;
 use ExeGeseIT\Test\Entity\Articlestatus;
-use ExeGeseIT\Test\Entity\Deliveryformstatus;
+use ExeGeseIT\Test\Entity\Datawarehouse;
 use Symfony\Component\VarExporter\VarExporter;
 
 // require_once __DIR__ . '/../vendor/autoload.php';
 
 // Create a simple "default" Doctrine ORM configuration for Attributes
 $config = ORMSetup::createAttributeMetadataConfiguration(
-    paths: [__DIR__ . '/'],
+    paths: [__DIR__ . 'test2.php/'],
     isDevMode: true,
 );
 
@@ -37,37 +37,31 @@ $connection = DriverManager::getConnection([
 // obtaining the entity manager
 $entityManager = new EntityManager($connection, $config);
 
+
 $searchData = [
-    SearchFilter::equal('articleStatus') => [Articlestatus::LOADED, Articlestatus::REFUSED, Articlestatus::REMOVAL_MISSING, Articlestatus::RETURNED],
-    SearchFilter::notEqual('articleStatus') => Articlestatus::RETURNED,
+    SearchFilter::equal('keyorganization') => 'CFA_MEDERIC',
+    SearchFilter::equal('colid') => 'coll_1',
+    SearchFilter::equal('archivestatus') => 1,
+    SearchFilter::equal('type') => 'BUDGET',
+    SearchFilter::equal('extra1') => 'Frais Generaux',
+    SearchFilter::equal('extra2') => 'Frais Generaux',
     SearchFilter::andOr() => [
-        SearchFilter::equal('dealer') => '64510000 - COTISATIONS URSSAF',
-        SearchFilter::equal('dealer') => '',
-        SearchFilter::null('dealer') => true,
+        SearchFilter::equal('glaccount') => '64510000 - COTISATIONS URSSAF',
+        SearchFilter::equal('glaccount') => '',
+        SearchFilter::null('glaccount') => true,
     ],
-    SearchFilter::andOr() => [
-        SearchFilter::equal('isremoval') => true,
-        SearchFilter::equal('deliveryformStatus') => [Deliveryformstatus::ABSENT, Deliveryformstatus::DELIVERED],
-        SearchFilter::or() => [
-            SearchFilter::equal('deliveryformStatus') => Deliveryformstatus::DOCKED,
-            SearchFilter::equal('isremoval') => false,
-        ],
-    ],
-    SearchFilter::or() => [
-        SearchFilter::equal('deliveryformStatus') => Deliveryformstatus::DOCKED,
-        SearchFilter::equal('isremoval') => false,
-    ],
-    SearchFilter::filter('idarticle') => null,
+    SearchFilter::greaterOrEqual('docdate') => '2025-01-01 00:00:00',
+    SearchFilter::lowerOrEqual('docdate') => '2025-12-31 00:00:00',
 
 ];
 
 echo VarExporter::export($searchData);
 echo "\n";
-echo SearchHelper::dumpParsedSearchParameters($searchData, pretty: true);
+ echo SearchHelper::dumpParsedSearchParameters($searchData, pretty: true);
 echo "\n";
 
 /** @var Querybuilder $queryBuilder */
-$queryBuilder = $entityManager->getRepository(Article::class)->fetchArticleQb($searchData);
+$queryBuilder = $entityManager->getRepository(Datawarehouse::class)->fetchDatawarehouseQb($searchData);
 $sql = $queryBuilder->getQuery()->getSQL();
 
 if (preg_match('/WHERE(.+)$/s', $sql, $matches)) {

@@ -26,7 +26,6 @@ return RectorConfig::configure()
         naming: true,
         instanceOf: true,
         earlyReturn: true,
-        strictBooleans: true,
         rectorPreset: true,
         doctrineCodeQuality: true,
         symfonyCodeQuality: true,

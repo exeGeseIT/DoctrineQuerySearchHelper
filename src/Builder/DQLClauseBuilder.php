@@ -175,6 +175,11 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
             $field = $this->searchFields[$searchKey] ?? null;
 
             if (null === $field) {
+                if (!SearchFilter::isCompositeEncodedFilter($searchKey)) {
+                    unset($compositeFilters[$searchKey]);
+                    continue;
+                }
+
                 /** @var array<string, mixed> $stack */
                 $CompositeStatement->add($this->getCompositeDQLStatement($searchKey, $stack));
                 continue;

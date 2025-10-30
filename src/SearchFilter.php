@@ -35,6 +35,13 @@ final class SearchFilter
         ]);
     }
 
+    public static function isCompositeEncodedFilter(string $filter): bool
+    {
+        return str_starts_with($filter, self::COMPOSITE_AND)
+            || str_starts_with($filter, self::COMPOSITE_OR)
+            || str_starts_with($filter, self::COMPOSITE_AND_OR);
+    }
+
     private static function normalize(string $filter): string
     {
         $_filter = $filter;

@@ -133,9 +133,7 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
         $whereFilters = $clauseFilters;
         $compositeWhereFilters = [];
         foreach ($clauseFilters as $searchKey => $filters) {
-            $filter = SearchFilter::decodeSearchfilter($searchKey)['filter'];
-
-            if (SearchFilter::isCompositeFilter($filter)) {
+            if (SearchFilter::isCompositeEncodedFilter($searchKey)) {
                 $compositeWhereFilters[$searchKey] = $filters;
                 unset($whereFilters[$searchKey]);
             }

@@ -190,6 +190,11 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
             $field = $this->searchFields[$searchKey] ?? null;
 
             if (null === $field) {
+                if (!SearchFilter::isCompositeEncodedFilter($searchKey)) {
+                    unset($compositeFilters[$searchKey]);
+                    continue;
+                }
+
                 /** @var array<string, mixed> $stack */
                 $CompositeStatement->with($this->getCompositeDBALStatement($searchKey, $stack));
                 continue;

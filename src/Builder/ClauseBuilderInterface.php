@@ -12,6 +12,8 @@ use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
  * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
  *
  * @phpstan-import-type TSearch from SearchHelper
+ *
+ * @template-covariant  T of QueryBuilder|QueryBuilderDBAL
  */
 interface ClauseBuilderInterface
 {
@@ -32,6 +34,8 @@ interface ClauseBuilderInterface
 
     /**
      * @param TSearch|null $search
+     *
+     * @return T
      */
     public function getQueryBuilder(?array $search, ?string $paginatorSort): QueryBuilder|QueryBuilderDBAL;
 }

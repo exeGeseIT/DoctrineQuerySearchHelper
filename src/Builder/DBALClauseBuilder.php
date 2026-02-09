@@ -20,6 +20,8 @@ use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
  *
  * @phpstan-import-type TSearch from SearchHelper
  * @phpstan-import-type TWhere from SearchHelper
+ *
+ * @extends AbstractClauseBuilderProcessor<QueryBuilder>
  */
 class DBALClauseBuilder extends AbstractClauseBuilderProcessor
 {

@@ -15,6 +15,10 @@ use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
  * @phpstan-import-type TSearch from SearchHelper
  * @phpstan-import-type TWhere  from SearchHelper
  * @phpstan-import-type TSort   from SearchHelper
+ *
+ * @template T of QueryBuilder|QueryBuilderDBAL
+ *
+ * @implements ClauseBuilderInterface<T>
  */
 abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
 {
@@ -30,6 +34,8 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
 
     /**
      * @param TSearch|null $search
+     *
+     * @return T
      */
     abstract public function getQueryBuilder(?array $search, ?string $paginatorSort): QueryBuilder|QueryBuilderDBAL;
 

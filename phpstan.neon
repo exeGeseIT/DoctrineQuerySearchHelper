@@ -9,6 +9,7 @@ parameters:
     reportUnmatchedIgnoredErrors: true
     paths:
         - src/
+        - Test/
     type_coverage:  #dd means at least dd % type coverage is required
         return_type: 100
         param_type: 100

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Rector\CodingStyle\Rector\ClassLike\NewlineBetweenClassLikeStmtsRector;
 use Rector\Config\RectorConfig;
 
 return RectorConfig::configure()
@@ -13,6 +14,7 @@ return RectorConfig::configure()
     ->withCache(cacheDirectory: __DIR__ . '/tmp/rector')
     ->withPaths([
         __DIR__ . '/src',
+        __DIR__ . '/Test',
     ])
     ->withRootFiles()
     ->withImportNames(importShortClasses: false, removeUnusedImports: true)
@@ -34,4 +36,7 @@ return RectorConfig::configure()
         doctrine: true,
     )
     ->withAttributesSets(all: true)
+    ->withSkip([
+        NewlineBetweenClassLikeStmtsRector::class,
+    ])
 ;

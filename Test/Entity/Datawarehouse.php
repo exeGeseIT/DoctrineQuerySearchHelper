@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace ExeGeseIT\Test\Entity\Datawarehouse;
+namespace ExeGeseIT\DoctrineQuerySearchHelper\Test\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use ExeGeseIT\Test\Repository\Datawarehouse\DatawarehouseRepository;
+use ExeGeseIT\DoctrineQuerySearchHelper\Test\Repository\DatawarehouseRepository;
 
 #[ORM\Table(name: 'datawarehouse')]
 #[ORM\UniqueConstraint(name: 'U_datawarehouse', fields: ['organizationkey', 'collid', 'docid'])]
@@ -131,7 +131,7 @@ final class Datawarehouse
         return $this->type;
     }
 
-    public function getDocstatus(): int
+    public function getDocstatus(): ?int
     {
         return $this->docstatus;
     }

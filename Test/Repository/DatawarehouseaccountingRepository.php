@@ -2,29 +2,38 @@
 
 declare(strict_types=1);
 
-namespace ExeGeseIT\Test\Repository\Datawarehouse;
+namespace ExeGeseIT\DoctrineQuerySearchHelper\Test\Repository;
 
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
-use ExeGeseIT\DoctrineQuerySearchHelper\QueryClauseBuilder;
-use ExeGeseIT\Test\Entity\Datawarehouse\Datawarehouse;
+use ExeGeseIT\DoctrineQuerySearchHelper\Builder\DQLClauseBuilder;
+use ExeGeseIT\DoctrineQuerySearchHelper\Test\Entity\Datawarehouseaccounting;
 
 /**
- * @extends EntityRepository<Datawarehouse>
+ * @extends EntityRepository<Datawarehouseaccounting>
  */
-class DatawarehouseRepository extends EntityRepository
+class DatawarehouseaccountingRepository extends EntityRepository
 {
     /**
      * @param array<string, mixed> $search
      */
-    public function fetchDatawarehouseQb(array $search = [], string $paginatorSort = ''): QueryBuilder
+    public function fetchDatawarehouseaccountingQb(array $search = [], string $paginatorSort = ''): QueryBuilder
     {
-        $queryBuilder = $this->createQueryBuilder('dwh');
+        $queryBuilder = $this->createQueryBuilder('dwha')
+            ->innerJoin('dwha.datawarehouse', 'dwh')
+            ->addSelect('dwh')
+        ;
+
         $queryBuilder->addOrderBy('dwh.modifieddate', 'DESC');
 
-        $dqlClauseBuilder = QueryClauseBuilder::getInstance($queryBuilder);
+        $dqlClauseBuilder = new DQLClauseBuilder($queryBuilder);
         $dqlClauseBuilder
             ->setSearchFields([
+                'account' => 'dwha.glaccount',
+                'glaccount' => 'dwha.glaccount',
+                'analytic1' => 'dwha.analytic1',
+                'analytic2' => 'dwha.analytic2',
+
                 'keyorganization' => 'dwh.organizationkey',
                 'organizationkey' => 'dwh.organizationkey',
                 'collid' => 'dwh.collid',

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace ExeGeseIT\Test\Entity\Datawarehouse;
+namespace ExeGeseIT\DoctrineQuerySearchHelper\Test\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use ExeGeseIT\Test\Repository\Datawarehouse\DatawarehouseaccountingRepository;
+use ExeGeseIT\DoctrineQuerySearchHelper\Test\Repository\DatawarehouseaccountingRepository;
 
 #[ORM\Table(name: 'datawarehouseaccounting')]
 #[ORM\Index(name: 'I_datawarehouseaccounting_glaccount_analytics', fields: ['glaccount', 'analytic1', 'analytic2'])]

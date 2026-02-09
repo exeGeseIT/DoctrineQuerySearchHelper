@@ -44,8 +44,12 @@
     },
     "autoload": {
         "psr-4": {
-            "ExeGeseIT\\DoctrineQuerySearchHelper\\": "src/",
-            "ExeGeseIT\\Test\\": "Test/"
+            "ExeGeseIT\\DoctrineQuerySearchHelper\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ExeGeseIT\\DoctrineQuerySearchHelper\\Test\\": "Test/"
         }
     }
 }

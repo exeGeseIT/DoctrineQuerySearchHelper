@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace ExeGeseIT\Test\Entity;
+namespace ExeGeseIT\Test\Entity\Datawarehouse;
 
-use ExeGeseIT\Test\Repository\DatawarehouseRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use ExeGeseIT\Test\Repository\Datawarehouse\DatawarehouseRepository;
 
 #[ORM\Table(name: 'datawarehouse')]
 #[ORM\UniqueConstraint(name: 'U_datawarehouse', fields: ['organizationkey', 'collid', 'docid'])]
 #[ORM\Entity(repositoryClass: DatawarehouseRepository::class, readOnly: true)]
 final class Datawarehouse
 {
-    final public const CREDIT_LINE = 'C';
-    final public const DEBIT_LINE = 'D';
+    public const CREDIT_LINE = 'C';
+    public const DEBIT_LINE = 'D';
 
     /**
      * @var Collection<int, Datawarehouseaccounting>
@@ -131,7 +131,7 @@ final class Datawarehouse
         return $this->type;
     }
 
-    public function getDocstatus(): ?int
+    public function getDocstatus(): int
     {
         return $this->docstatus;
     }
@@ -173,7 +173,7 @@ final class Datawarehouse
 
     public function getInternalref(): ?string
     {
-        return $this->getPoref();
+        return $this->poref;
     }
 
     public function getAmountht(): float
@@ -258,7 +258,7 @@ final class Datawarehouse
 
     public function getWorkflowstatus(): int
     {
-        return $this->getDocstatus() ?? -1;
+        return $this->docstatus ?? -1;
     }
 
     public function getArchivestatus(): ?int
@@ -278,10 +278,8 @@ final class Datawarehouse
 
     /**
      * @return Collection<int, Datawarehouseaccounting>
-     *
-     * @phpstan-return ArrayCollection<int, Datawarehouseaccounting>
      */
-    public function getAccountings(): ArrayCollection
+    public function getAccountings(): Collection
     {
         return $this->accountings;
     }

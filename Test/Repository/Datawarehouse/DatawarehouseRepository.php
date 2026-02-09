@@ -2,40 +2,29 @@
 
 declare(strict_types=1);
 
-namespace ExeGeseIT\Test\Repository;
+namespace ExeGeseIT\Test\Repository\Datawarehouse;
 
-use App\Entity\Datawarehouse\Datawarehouseaccounting;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
-use Doctrine\Persistence\ManagerRegistry;
 use ExeGeseIT\DoctrineQuerySearchHelper\QueryClauseBuilder;
+use ExeGeseIT\Test\Entity\Datawarehouse\Datawarehouse;
 
 /**
- * @extends EntityRepository<Datawarehouseaccounting>
+ * @extends EntityRepository<Datawarehouse>
  */
-class DatawarehouseaccountingRepository extends EntityRepository
+class DatawarehouseRepository extends EntityRepository
 {
     /**
      * @param array<string, mixed> $search
      */
-    public function fetchDatawarehouseaccountingQb(array $search = [], string $paginatorSort = ''): QueryBuilder
+    public function fetchDatawarehouseQb(array $search = [], string $paginatorSort = ''): QueryBuilder
     {
-        $queryBuilder = $this->createQueryBuilder('dwha')
-            ->innerJoin('dwha.datawarehouse', 'dwh')
-            ->addSelect('dwh')
-        ;
-
+        $queryBuilder = $this->createQueryBuilder('dwh');
         $queryBuilder->addOrderBy('dwh.modifieddate', 'DESC');
 
-        $queryClauseBuilder = QueryClauseBuilder::getInstance($queryBuilder);
-        $queryClauseBuilder
+        $dqlClauseBuilder = QueryClauseBuilder::getInstance($queryBuilder);
+        $dqlClauseBuilder
             ->setSearchFields([
-                'account' => 'dwha.glaccount',
-                'glaccount' => 'dwha.glaccount',
-                'analytic1' => 'dwha.analytic1',
-                'analytic2' => 'dwha.analytic2',
-
                 'keyorganization' => 'dwh.organizationkey',
                 'organizationkey' => 'dwh.organizationkey',
                 'collid' => 'dwh.collid',
@@ -89,6 +78,6 @@ class DatawarehouseaccountingRepository extends EntityRepository
             ])
         ;
 
-        return $queryClauseBuilder->getQueryBuilder($search, $paginatorSort);
+        return $dqlClauseBuilder->getQueryBuilder($search, $paginatorSort);
     }
 }

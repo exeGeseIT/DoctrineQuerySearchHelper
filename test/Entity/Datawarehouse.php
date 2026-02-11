@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace ExeGeseIT\DoctrineQuerySearchHelper\Test\Entity;
+namespace ExeGeseIT\Test\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use ExeGeseIT\DoctrineQuerySearchHelper\Test\Repository\DatawarehouseRepository;
+use ExeGeseIT\Test\Repository\DatawarehouseRepository;
 
 #[ORM\Table(name: 'datawarehouse')]
 #[ORM\UniqueConstraint(name: 'U_datawarehouse', fields: ['organizationkey', 'collid', 'docid'])]

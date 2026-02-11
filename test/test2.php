@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
@@ -9,10 +11,8 @@ use Doctrine\ORM\QueryBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\QueryClauseBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
-use ExeGeseIT\DoctrineQuerySearchHelper\Test\Entity\Datawarehouseaccounting;
+use ExeGeseIT\Test\Entity\Datawarehouseaccounting;
 use Symfony\Component\VarExporter\VarExporter;
-
-require_once __DIR__ . '/../vendor/autoload.php';
 
 // Create a simple "default" Doctrine ORM configuration for Attributes
 $config = ORMSetup::createAttributeMetadataConfiguration(

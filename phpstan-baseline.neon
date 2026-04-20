@@ -17,3 +17,8 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: src/SearchHelper.php
+
+		-
+			rawMessage: "Parameter #1 $arg of method Doctrine\\ORM\\Query\\Expr\\Base::add() expects string|Stringable|null, mixed given."
+			path: src/Builder/DQLClauseBuilder.php
+			identifier: argument.type

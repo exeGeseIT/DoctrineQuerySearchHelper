@@ -147,8 +147,8 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
             default => 'andWhere',
         };
 
-        $CompositeStatement = $this->getCompositeDQLStatement($encodedCompositeKey, $compositeFilters);
-        $this->queryBuilder->{$compositePartAdder}($CompositeStatement);
+        $compositeStatement = $this->getCompositeDQLStatement($encodedCompositeKey, $compositeFilters);
+        $this->queryBuilder->{$compositePartAdder}($compositeStatement);
     }
 
     /**
@@ -162,7 +162,7 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
         $compositeFilterKey = $demuxedFilter['filter'];
         $token = $demuxedFilter['key'];
 
-        [$radicalKey, $CompositeStatement] = match ($compositeFilterKey) {
+        [$radicalKey, $compositeStatement] = match ($compositeFilterKey) {
             // .. AND (field1 ... OR field2 ...)
             SearchFilter::COMPOSITE_AND_OR => ['ANDOR', $this->queryBuilder->expr()->orX()],
             // .. OR (field1 ... AND field2 ...)
@@ -183,7 +183,7 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
                 }
 
                 /** @var array<string, mixed> $stack */
-                $CompositeStatement->add($this->getCompositeDQLStatement($searchKey, $stack));
+                $compositeStatement->add($this->getCompositeDQLStatement($searchKey, $stack));
                 continue;
             }
 
@@ -206,9 +206,9 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
                         );
                     }
 
-                    $CompositeStatement->add($orStatements);
+                    $compositeStatement->add($orStatements);
                 } else {
-                    $CompositeStatement->add(
+                    $compositeStatement->add(
                         $this->queryBuilder->expr()->{$expFn->value()}($field, ':' . $_searchKey)
                     );
 
@@ -219,7 +219,7 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
             }
         }
 
-        return $CompositeStatement;
+        return $compositeStatement;
     }
 
     private function initializeDQLOrderby(?string $paginatorSort): void

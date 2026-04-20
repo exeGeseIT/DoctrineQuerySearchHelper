@@ -21,6 +21,5 @@ parameters:
         function: 40 #9
 
     strictRules:
-        booleansInConditions: false
         strictFunctionCalls: false
         noVariableVariables: false

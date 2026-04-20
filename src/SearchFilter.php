@@ -69,6 +69,22 @@ final class SearchFilter
         ];
     }
 
+    public static function resolveFilterCallable(string $filter): ?callable
+    {
+        return match ($filter) {
+            self::EQUAL => self::equal(...),
+            self::NOT_EQUAL => self::notEqual(...),
+            self::GREATER => self::greater(...),
+            self::GREATER_OR_EQUAL => self::greaterOrEqual(...),
+            self::LOWER => self::lower(...),
+            self::LOWER_OR_EQUAL => self::lowerOrEqual(...),
+            self::NULL => self::null(...),
+            self::NOT_NULL => self::notNull(...),
+            self::LIKE => self::like(...),
+            default => null,
+        };
+    }
+
     /**
      * @param array<string, string> $searchParameters
      */

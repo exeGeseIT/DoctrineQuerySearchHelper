@@ -111,10 +111,26 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
                 continue;
             }
 
-            $v = explode(' ', $_order);
+            $v = preg_split('/\s+/', $_order);
+
+            if (false === $v) {
+                continue;
+            }
+
+            $sort = $v[0];
+            $direction = strtoupper($v[1] ?? 'ASC');
+
+            if (!(bool) preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $sort)) {
+                continue;
+            }
+
+            if (!in_array($direction, ['ASC', 'DESC'], true)) {
+                $direction = 'ASC';
+            }
+
             $tSorts[] = [
-                'sort' => $v[0],
-                'direction' => $v[1] ?? 'ASC',
+                'sort' => $sort,
+                'direction' => $direction,
             ];
         }
 

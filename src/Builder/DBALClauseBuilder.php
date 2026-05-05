@@ -126,14 +126,23 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
         $this->queryBuilder->andWhere($compositeExpression);
 
         if (SearchHelper::NULL_VALUE !== $value) {
-            $typeValue = match (true) {
-                !is_array($value) => ParameterType::STRING,
-                is_int($value[0]) => ArrayParameterType::INTEGER,
-                default => ArrayParameterType::STRING,
-            };
-
-            $this->queryBuilder->setParameter($parameterKey, $value, $typeValue);
+            $this->queryBuilder->setParameter($parameterKey, $value, $this->resolveParameterType($value));
         }
+    }
+
+    private function resolveParameterType(mixed $value): ArrayParameterType|ParameterType
+    {
+        if (is_array($value)) {
+            return isset($value[0]) && is_int($value[0])
+                ? ArrayParameterType::INTEGER
+                : ArrayParameterType::STRING;
+        }
+
+        return match (true) {
+            is_int($value) => ParameterType::INTEGER,
+            is_bool($value) => ParameterType::BOOLEAN,
+            default => ParameterType::STRING,
+        };
     }
 
     /**
@@ -177,7 +186,7 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
         $compositeFilterKey = $demuxedFilter['filter'];
         $token = $demuxedFilter['key'];
 
-        [$radicalKey, $CompositeStatement] = match ($compositeFilterKey) {
+        [$radicalKey, $compositeStatement] = match ($compositeFilterKey) {
             // .. AND (field1 ... OR field2 ...)
             SearchFilter::COMPOSITE_AND_OR => ['ANDOR', $this->queryBuilder->expr()->or('1=0')],
             // .. OR (field1 ... AND field2 ...)
@@ -193,12 +202,11 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
 
             if (null === $field) {
                 if (!SearchFilter::isCompositeEncodedFilter($searchKey)) {
-                    unset($compositeFilters[$searchKey]);
                     continue;
                 }
 
                 /** @var array<string, mixed> $stack */
-                $CompositeStatement->with($this->getCompositeDBALStatement($searchKey, $stack));
+                $compositeStatement->with($this->getCompositeDBALStatement($searchKey, $stack));
                 continue;
             }
 
@@ -230,27 +238,21 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
                     }
 
                     if ($orStatements instanceof CompositeExpression) {
-                        $CompositeStatement = $CompositeStatement->with($orStatements);
+                        $compositeStatement = $compositeStatement->with($orStatements);
                     }
                 } else {
                     /** @var CompositeExpression $compositeExpression */
                     $compositeExpression = $this->queryBuilder->expr()->{$expFn->value()}($field, ':'.$_searchKey);
-                    $CompositeStatement = $CompositeStatement->with($compositeExpression);
+                    $compositeStatement = $compositeStatement->with($compositeExpression);
 
                     if (SearchHelper::NULL_VALUE !== $value) {
-                        $typeValue = match (true) {
-                            !is_array($value) => ParameterType::STRING,
-                            is_int($value[0]) => ArrayParameterType::INTEGER,
-                            default => ArrayParameterType::STRING,
-                        };
-
-                        $this->queryBuilder->setParameter($_searchKey, $value, $typeValue);
+                        $this->queryBuilder->setParameter($_searchKey, $value, $this->resolveParameterType($value));
                     }
                 }
             }
         }
 
-        return $CompositeStatement;
+        return $compositeStatement;
     }
 
     private function initializeDBALOrderby(?string $paginatorSort): void

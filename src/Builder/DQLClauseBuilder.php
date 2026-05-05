@@ -178,7 +178,6 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
 
             if (null === $field) {
                 if (!SearchFilter::isCompositeEncodedFilter($searchKey)) {
-                    unset($compositeFilters[$searchKey]);
                     continue;
                 }
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__.'/../vendor/autoload.php';
 
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
@@ -16,14 +16,14 @@ use Symfony\Component\VarExporter\VarExporter;
 
 // Create a simple "default" Doctrine ORM configuration for Attributes
 $config = ORMSetup::createAttributeMetadataConfiguration(
-    paths: [__DIR__ . 'test2.php/'],
+    paths: [__DIR__.'test2.php/'],
     isDevMode: true,
 );
 
 // configuring the database connection
 $connection = DriverManager::getConnection([
     'driver' => 'pdo_sqlite',
-    'path' => __DIR__ . '/db.sqlite',
+    'path' => __DIR__.'/db.sqlite',
 ], $config);
 
 // obtaining the entity manager

@@ -32,7 +32,8 @@ final class SearchFilter
             self::COMPOSITE_AND,
             self::COMPOSITE_OR,
             self::COMPOSITE_AND_OR,
-        ]);
+        ],
+            true);
     }
 
     public static function isCompositeEncodedFilter(string $filter): bool
@@ -101,7 +102,7 @@ final class SearchFilter
     public static function getFilteredKey(string $searchKey, array $searchParameters): ?string
     {
         $hash = sprintf(':%s', implode(':', array_keys($searchParameters)));
-        $pattern = '/:(?P<filteredkey>(?:[^[:alnum:]])?' . $searchKey . '~[[:alnum:]]+)/i';
+        $pattern = '/:(?P<filteredkey>(?:[^[:alnum:]])?'.$searchKey.'~[[:alnum:]]+)/i';
         preg_match($pattern, $hash, $matches);
 
         return $matches['filteredkey'] ?? null;
@@ -127,7 +128,7 @@ final class SearchFilter
      */
     public static function andOr(): string
     {
-        return self::COMPOSITE_AND_OR . self::getToken();
+        return self::COMPOSITE_AND_OR.self::getToken();
     }
 
     /**
@@ -136,7 +137,7 @@ final class SearchFilter
      */
     public static function and(): string
     {
-        return self::COMPOSITE_AND . self::getToken();
+        return self::COMPOSITE_AND.self::getToken();
     }
 
     /**
@@ -145,7 +146,7 @@ final class SearchFilter
      */
     public static function or(): string
     {
-        return self::COMPOSITE_OR . self::getToken();
+        return self::COMPOSITE_OR.self::getToken();
     }
 
     /**
@@ -156,7 +157,7 @@ final class SearchFilter
      */
     public static function filter(string $searchKey, bool $tokenize = true): string
     {
-        return self::FILTER . trim($searchKey) . self::tokenize($tokenize);
+        return self::FILTER.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -167,7 +168,7 @@ final class SearchFilter
      */
     public static function equal(string $searchKey, bool $tokenize = true): string
     {
-        return self::EQUAL . trim($searchKey) . self::tokenize($tokenize);
+        return self::EQUAL.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -178,7 +179,7 @@ final class SearchFilter
      */
     public static function notEqual(string $searchKey, bool $tokenize = true): string
     {
-        return self::NOT_EQUAL . trim($searchKey) . self::tokenize($tokenize);
+        return self::NOT_EQUAL.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -189,7 +190,7 @@ final class SearchFilter
      */
     public static function like(string $searchKey, bool $tokenize = true): string
     {
-        return self::LIKE . trim($searchKey) . self::tokenize($tokenize);
+        return self::LIKE.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -200,7 +201,7 @@ final class SearchFilter
      */
     public static function notLike(string $searchKey, bool $tokenize = true): string
     {
-        return self::NOT_LIKE . trim($searchKey) . self::tokenize($tokenize);
+        return self::NOT_LIKE.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -214,7 +215,7 @@ final class SearchFilter
      */
     public static function likeStrict(string $searchKey, bool $tokenize = true): string
     {
-        return self::LIKE_STRICT . trim($searchKey) . self::tokenize($tokenize);
+        return self::LIKE_STRICT.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -228,7 +229,7 @@ final class SearchFilter
      */
     public static function notLikeStrict(string $searchKey, bool $tokenize = true): string
     {
-        return self::NOT_LIKE_STRICT . trim($searchKey) . self::tokenize($tokenize);
+        return self::NOT_LIKE_STRICT.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -239,7 +240,7 @@ final class SearchFilter
      */
     public static function null(string $searchKey, bool $tokenize = true): string
     {
-        return self::NULL . trim($searchKey) . self::tokenize($tokenize);
+        return self::NULL.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -250,7 +251,7 @@ final class SearchFilter
      */
     public static function notNull(string $searchKey, bool $tokenize = true): string
     {
-        return self::NOT_NULL . trim($searchKey) . self::tokenize($tokenize);
+        return self::NOT_NULL.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -261,7 +262,7 @@ final class SearchFilter
      */
     public static function greater(string $searchKey, bool $tokenize = true): string
     {
-        return self::GREATER . trim($searchKey) . self::tokenize($tokenize);
+        return self::GREATER.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -272,7 +273,7 @@ final class SearchFilter
      */
     public static function greaterOrEqual(string $searchKey, bool $tokenize = true): string
     {
-        return self::GREATER_OR_EQUAL . trim($searchKey) . self::tokenize($tokenize);
+        return self::GREATER_OR_EQUAL.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -283,7 +284,7 @@ final class SearchFilter
      */
     public static function lower(string $searchKey, bool $tokenize = true): string
     {
-        return self::LOWER . trim($searchKey) . self::tokenize($tokenize);
+        return self::LOWER.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -294,7 +295,7 @@ final class SearchFilter
      */
     public static function lowerOrEqual(string $searchKey, bool $tokenize = true): string
     {
-        return self::LOWER_OR_EQUAL . trim($searchKey) . self::tokenize($tokenize);
+        return self::LOWER_OR_EQUAL.trim($searchKey).self::tokenize($tokenize);
     }
 
     /**
@@ -314,6 +315,6 @@ final class SearchFilter
 
     private static function tokenize(bool $truly): string
     {
-        return $truly ? '~' . self::getToken() : '';
+        return $truly ? '~'.self::getToken() : '';
     }
 }

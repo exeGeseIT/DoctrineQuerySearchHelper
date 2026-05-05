@@ -9,12 +9,12 @@ return RectorConfig::configure()
     // ->withoutParallel()
     ->withPhpSets(php81: true)
     ->withPHPStanConfigs([
-        __DIR__ . '/rector-phpstan.neon',
+        __DIR__.'/rector-phpstan.neon',
     ])
-    ->withCache(cacheDirectory: __DIR__ . '/tmp/rector')
+    ->withCache(cacheDirectory: __DIR__.'/tmp/rector')
     ->withPaths([
-        __DIR__ . '/src',
-        __DIR__ . '/Test',
+        __DIR__.'/src',
+        __DIR__.'/Test',
     ])
     ->withRootFiles()
     ->withImportNames(importShortClasses: false, removeUnusedImports: true)

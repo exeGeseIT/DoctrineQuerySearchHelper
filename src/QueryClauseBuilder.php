@@ -47,7 +47,7 @@ final class QueryClauseBuilder
 
         $clause = $returnFullQuery ? $sql : match (preg_match('/FROM(.+)$/s', $sql, $matches)) {
             false => $sql,
-            default => '... FROM ' . $matches[1],
+            default => '... FROM '.$matches[1],
         };
 
         $sqlFormatter = new SqlFormatter($highlighted ? null : new NullHighlighter());

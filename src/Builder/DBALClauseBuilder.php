@@ -103,7 +103,7 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
             /** @var CompositeExpression $compositeExpression */
             $compositeExpression = $this->queryBuilder
                 ->setParameter($parameter, $value)
-                ->expr()->{$filterExprFn->value()}($field, ':' . $parameter)
+                ->expr()->{$filterExprFn->value()}($field, ':'.$parameter)
             ;
 
             if (!$orx instanceof CompositeExpression) {
@@ -122,7 +122,7 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
     private function handleSingleValue(string $field, string $parameterKey, FilterExprFn $filterExprFn, mixed $value): void
     {
         /** @var CompositeExpression $compositeExpression */
-        $compositeExpression = $this->queryBuilder->expr()->{$filterExprFn->value()}($field, ':' . $parameterKey);
+        $compositeExpression = $this->queryBuilder->expr()->{$filterExprFn->value()}($field, ':'.$parameterKey);
         $this->queryBuilder->andWhere($compositeExpression);
 
         if (SearchHelper::NULL_VALUE !== $value) {
@@ -218,7 +218,7 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
                         /** @var CompositeExpression $compositeExpression */
                         $compositeExpression = $this->queryBuilder
                             ->setParameter($parameter, $pattern)
-                            ->expr()->{$expFn->value()}($field, ':' . $parameter)
+                            ->expr()->{$expFn->value()}($field, ':'.$parameter)
                         ;
 
                         if (!$orStatements instanceof CompositeExpression) {
@@ -234,7 +234,7 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
                     }
                 } else {
                     /** @var CompositeExpression $compositeExpression */
-                    $compositeExpression = $this->queryBuilder->expr()->{$expFn->value()}($field, ':' . $_searchKey);
+                    $compositeExpression = $this->queryBuilder->expr()->{$expFn->value()}($field, ':'.$_searchKey);
                     $CompositeStatement = $CompositeStatement->with($compositeExpression);
 
                     if (SearchHelper::NULL_VALUE !== $value) {

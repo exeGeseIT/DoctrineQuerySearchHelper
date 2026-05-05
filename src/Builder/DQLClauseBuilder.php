@@ -103,7 +103,7 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
             $orx->add(
                 $this->queryBuilder
                     ->setParameter($parameter, $value)
-                    ->expr()->{$filterExprFn->value()}($field, ':' . $parameter)
+                    ->expr()->{$filterExprFn->value()}($field, ':'.$parameter)
             );
         }
 
@@ -113,7 +113,7 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
     private function handleSingleValue(string $field, string $parameterKey, FilterExprFn $filterExprFn, mixed $value): void
     {
         $this->queryBuilder->andWhere(
-            $this->queryBuilder->expr()->{$filterExprFn->value()}($field, ':' . $parameterKey)
+            $this->queryBuilder->expr()->{$filterExprFn->value()}($field, ':'.$parameterKey)
         );
 
         if (SearchHelper::NULL_VALUE !== $value) {
@@ -202,14 +202,14 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
                         $orStatements->add(
                             $this->queryBuilder
                                 ->setParameter($parameter, $pattern)
-                                ->expr()->{$expFn->value()}($field, ':' . $parameter)
+                                ->expr()->{$expFn->value()}($field, ':'.$parameter)
                         );
                     }
 
                     $compositeStatement->add($orStatements);
                 } else {
                     $compositeStatement->add(
-                        $this->queryBuilder->expr()->{$expFn->value()}($field, ':' . $_searchKey)
+                        $this->queryBuilder->expr()->{$expFn->value()}($field, ':'.$_searchKey)
                     );
 
                     if (SearchHelper::NULL_VALUE !== $value) {

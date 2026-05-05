@@ -13,10 +13,10 @@ use Symplify\EasyCodingStandard\Config\ECSConfig;
 use Symplify\EasyCodingStandard\ValueObject\Set\SetList;
 
 return ECSConfig::configure()
-    ->withCache(directory: __DIR__ . '/tmp/ecs')
+    ->withCache(directory: __DIR__.'/tmp/ecs')
     ->withPaths([
-        __DIR__ . '/src',
-        __DIR__ . '/Test',
+        __DIR__.'/src',
+        __DIR__.'/Test',
     ])
     ->withPreparedSets(psr12: true, common: true)
     ->withSets([

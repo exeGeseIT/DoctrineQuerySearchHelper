@@ -7,7 +7,7 @@ use Rector\Config\RectorConfig;
 
 return RectorConfig::configure()
     // ->withoutParallel()
-    ->withPhpSets(php81: true)
+    ->withPhpSets(php82: true)
     ->withPHPStanConfigs([
         __DIR__.'/rector-phpstan.neon',
     ])

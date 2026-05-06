@@ -11,6 +11,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\FilterExprFn;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
+use ExeGeseIT\DoctrineQuerySearchHelper\ValueObject\WhereCriteria;
 
 /**
  * Cette classe permet de construire dynamiquement des clauses WHERE et ORDER BY
@@ -19,7 +20,6 @@ use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
  * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
  *
  * @phpstan-import-type TSearch from SearchHelper
- * @phpstan-import-type TWhere from SearchHelper
  *
  * @extends AbstractClauseBuilderProcessor<QueryBuilder>
  */
@@ -58,7 +58,7 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
     }
 
     /**
-     * @param array<string, list<TWhere>> $whereFilters
+     * @param array<string, list<WhereCriteria>> $whereFilters
      */
     private function processSimpleWhereFilters(array $whereFilters): void
     {
@@ -76,19 +76,17 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
         }
     }
 
-    /**
-     * @param TWhere $criteria
-     */
-    private function addWhereCondition(string $field, string $parameterKey, array $criteria): void
+    private function addWhereCondition(string $field, string $parameterKey, WhereCriteria $whereCriteria): void
     {
-        $expFn = $criteria['expFn'];
-        $value = $criteria['value'];
+        if ($whereCriteria->shouldExpandArrayAsOrConditions()) {
+            /** @var list<int|float|string> $value */
+            $value = $whereCriteria->value;
+            $this->handleArrayValue($field, $parameterKey, $whereCriteria->filterExprFn, $value, $whereCriteria->escapedLike);
 
-        if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($value)) {
-            $this->handleArrayValue($field, $parameterKey, $expFn, $value, $criteria['escapedLike'] ?? false);
-        } else {
-            $this->handleSingleValue($field, $parameterKey, $expFn, $value, $criteria['escapedLike'] ?? false);
+            return;
         }
+
+        $this->handleSingleValue($field, $parameterKey, $whereCriteria->filterExprFn, $whereCriteria->value, $whereCriteria->escapedLike);
     }
 
     /**
@@ -97,8 +95,9 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
     private function handleArrayValue(string $field, string $parameterKey, FilterExprFn $filterExprFn, array $values, bool $escapedLike = false): void
     {
         $orx = null;
-        foreach ($values as $i => $value) {
-            $parameter = sprintf('%s_%d', $parameterKey, $i);
+
+        foreach ($values as $index => $value) {
+            $parameter = sprintf('%s_%d', $parameterKey, $index);
             $this->queryBuilder->setParameter($parameter, $value);
 
             $compositeExpression = $this->buildExpression($field, ':'.$parameter, $filterExprFn, $escapedLike);
@@ -123,19 +122,19 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
         );
 
         if (SearchHelper::NULL_VALUE !== $value) {
-            $this->queryBuilder->setParameter($parameterKey, $value);
+            $this->queryBuilder->setParameter($parameterKey, $value, $this->resolveParameterType($value));
         }
     }
 
     private function buildExpression(string $field, string $parameter, FilterExprFn $filterExprFn, bool $escapedLike = false): string
     {
-        $expression = $this->queryBuilder->expr()->{$filterExprFn->value()}($field, $parameter);
+        $escapeChar = $escapedLike ? SearchHelper::LIKE_ESCAPE_CHARACTER : null;
 
-        if ($escapedLike && in_array($filterExprFn, [FilterExprFn::Like, FilterExprFn::NotLike], true)) {
-            return sprintf("%s ESCAPE '%s'", $expression, SearchHelper::LIKE_ESCAPE_CHARACTER);
-        }
-
-        return (string) $expression;
+        return (string) match ($filterExprFn) {
+            FilterExprFn::IsNull, FilterExprFn::IsNotNull => $this->queryBuilder->expr()->{$filterExprFn}($field),
+            FilterExprFn::Like, FilterExprFn::NotLike => $this->queryBuilder->expr()->{$filterExprFn}($field, $parameter, $escapeChar),
+            default => $this->queryBuilder->expr()->{$filterExprFn}($field, $parameter),
+        };
     }
 
     private function resolveParameterType(mixed $value): ArrayParameterType|ParameterType
@@ -154,7 +153,7 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
     }
 
     /**
-     * @param array<string, array<string, mixed>> $compositeWhereFilters
+     * @param array<string, array<string, list<WhereCriteria>>> $compositeWhereFilters
      */
     private function processCompositeWhereFilters(array $compositeWhereFilters): void
     {
@@ -164,9 +163,7 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
     }
 
     /**
-     * array<string, list<TWhere>|array<string, list<TWhere>> $compositeFilters.
-     *
-     * @param array<string, mixed> $compositeFilters
+     * @param array<string, list<WhereCriteria>|array<string, list<WhereCriteria>>> $compositeFilters
      */
     private function addCompositePart(string $encodedCompositeKey, array $compositeFilters): void
     {
@@ -184,9 +181,7 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
     }
 
     /**
-     * array<string, list<TWhere>|array<string, list<TWhere>> $compositeFilters.
-     *
-     * @param array<string, mixed> $compositeFilters
+     * @param array<string, list<WhereCriteria>|array<string, list<WhereCriteria>>> $compositeFilters
      */
     private function getCompositeDBALStatement(string $encodedCompositeKey, array $compositeFilters): CompositeExpression
     {
@@ -195,11 +190,8 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
         $token = $demuxedFilter['key'];
 
         [$radicalKey, $compositeStatement] = match ($compositeFilterKey) {
-            // .. AND (field1 ... OR field2 ...)
             SearchFilter::COMPOSITE_AND_OR => ['ANDOR', $this->queryBuilder->expr()->or('1=0')],
-            // .. OR (field1 ... AND field2 ...)
             SearchFilter::COMPOSITE_OR => ['OR', $this->queryBuilder->expr()->and('1=1')],
-            // SearchFilter::COMPOSITE_AND = .. AND (field1 ... AND field2 ...)
             default => ['AND', $this->queryBuilder->expr()->and('1=1')],
         };
 
@@ -213,29 +205,25 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
                     continue;
                 }
 
-                /** @var array<string, mixed> $stack */
-                $compositeStatement->with($this->getCompositeDBALStatement($searchKey, $stack));
+                /** @var array<string, list<WhereCriteria>|array<string, list<WhereCriteria>>> $stack */
+                $compositeStatement = $compositeStatement->with($this->getCompositeDBALStatement($searchKey, $stack));
                 continue;
             }
 
-            /**
-             * @var list<TWhere> $stack
-             */
+            /** @var list<WhereCriteria> $stack */
             foreach ($stack as $index => $criteria) {
-                $_searchKey = sprintf('%s_%s_i%d', $radical, $searchKey, $index);
-                $expFn = $criteria['expFn'];
-                $value = $criteria['value'];
+                $searchKeyParameter = sprintf('%s_%s_i%d', $radical, $searchKey, $index);
 
-                if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($value)) {
+                if ($criteria->shouldExpandArrayAsOrConditions()) {
+                    /** @var list<int|float|string> $value */
+                    $value = $criteria->value;
                     $orStatements = null;
-                    foreach ($value as $i => $pattern) {
-                        $parameter = sprintf('%s_%d', $_searchKey, $i);
 
-                        /** @var CompositeExpression $compositeExpression */
-                        $compositeExpression = $this->queryBuilder
-                            ->setParameter($parameter, $pattern)
-                            ->expr()->{$expFn->value()}($field, ':'.$parameter)
-                        ;
+                    foreach ($value as $valueIndex => $pattern) {
+                        $parameter = sprintf('%s_%d', $searchKeyParameter, $valueIndex);
+                        $this->queryBuilder->setParameter($parameter, $pattern);
+
+                        $compositeExpression = $this->buildExpression($field, ':'.$parameter, $criteria->filterExprFn, $criteria->escapedLike);
 
                         if (!$orStatements instanceof CompositeExpression) {
                             $orStatements = $this->queryBuilder->expr()->or($compositeExpression);
@@ -248,14 +236,15 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
                     if ($orStatements instanceof CompositeExpression) {
                         $compositeStatement = $compositeStatement->with($orStatements);
                     }
-                } else {
-                    /** @var CompositeExpression $compositeExpression */
-                    $compositeExpression = $this->queryBuilder->expr()->{$expFn->value()}($field, ':'.$_searchKey);
-                    $compositeStatement = $compositeStatement->with($compositeExpression);
 
-                    if (SearchHelper::NULL_VALUE !== $value) {
-                        $this->queryBuilder->setParameter($_searchKey, $value, $this->resolveParameterType($value));
-                    }
+                    continue;
+                }
+
+                $compositeExpression = $this->buildExpression($field, ':'.$searchKeyParameter, $criteria->filterExprFn, $criteria->escapedLike);
+                $compositeStatement = $compositeStatement->with($compositeExpression);
+
+                if (SearchHelper::NULL_VALUE !== $criteria->value) {
+                    $this->queryBuilder->setParameter($searchKeyParameter, $criteria->value, $this->resolveParameterType($criteria->value));
                 }
             }
         }
@@ -265,13 +254,16 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
 
     private function initializeDBALOrderby(?string $paginatorSort): void
     {
-        $tSorts = $this->normalizePaginatorSort($paginatorSort ?? '');
+        $sorts = $this->normalizePaginatorSort($paginatorSort ?? '');
 
-        if ([] !== $tSorts) {
-            $this->queryBuilder->resetOrderBy();
-            foreach ($tSorts as $tSort) {
-                $this->queryBuilder->addOrderBy($tSort['sort'], $tSort['direction']);
-            }
+        if ([] === $sorts) {
+            return;
+        }
+
+        $this->queryBuilder->resetOrderBy();
+
+        foreach ($sorts as $sort) {
+            $this->queryBuilder->addOrderBy($sort->field, $sort->direction);
         }
     }
 }

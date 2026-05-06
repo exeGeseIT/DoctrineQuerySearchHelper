@@ -8,13 +8,13 @@ use Doctrine\DBAL\Query\QueryBuilder as QueryBuilderDBAL;
 use Doctrine\ORM\QueryBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
+use ExeGeseIT\DoctrineQuerySearchHelper\ValueObject\SortCriteria;
+use ExeGeseIT\DoctrineQuerySearchHelper\ValueObject\WhereCriteria;
 
 /**
  * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
  *
  * @phpstan-import-type TSearch from SearchHelper
- * @phpstan-import-type TWhere  from SearchHelper
- * @phpstan-import-type TSort   from SearchHelper
  *
  * @template T of QueryBuilder|QueryBuilderDBAL
  *
@@ -28,7 +28,7 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
     protected array $searchFields = [];
 
     /**
-     * @var array<string>
+     * @var list<string>
      */
     private array $defaultLike = [];
 
@@ -84,43 +84,44 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
             return $search;
         }
 
-        $_search = [];
+        $normalizedSearch = [];
         foreach ($search as $searchfilter => $value) {
-            $m = SearchFilter::decodeSearchfilter($searchfilter);
+            $decodedFilter = SearchFilter::decodeSearchfilter($searchfilter);
 
-            if (('' === $m['filter']) && in_array($m['key'], $this->defaultLike)) {
-                $_search[SearchFilter::like($m['key'])] = $value;
-            } else {
-                $_search[$searchfilter] = $value;
+            if ('' === $decodedFilter['filter'] && in_array($decodedFilter['key'], $this->defaultLike, true)) {
+                $normalizedSearch[SearchFilter::like($decodedFilter['key'])] = $value;
+                continue;
             }
+
+            $normalizedSearch[$searchfilter] = $value;
         }
 
-        return $_search;
+        return $normalizedSearch;
     }
 
     /**
-     * @return array<int, TSort>
+     * @return list<SortCriteria>
      */
     protected function normalizePaginatorSort(string $paginatorSort): array
     {
-        $tSorts = [];
+        $sorts = [];
         foreach (explode(',', $paginatorSort) as $order) {
-            $_order = trim($order);
+            $normalizedOrder = trim($order);
 
-            if ('' === $_order) {
+            if ('' === $normalizedOrder) {
                 continue;
             }
 
-            $v = preg_split('/\s+/', $_order);
+            $parts = preg_split('/\s+/', $normalizedOrder);
 
-            if (false === $v) {
+            if (false === $parts) {
                 continue;
             }
 
-            $sort = $v[0];
-            $direction = strtoupper($v[1] ?? 'ASC');
+            $field = $parts[0];
+            $direction = strtoupper($parts[1] ?? 'ASC');
 
-            if (!(bool) preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $sort)) {
+            if (!(bool) preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $field)) {
                 continue;
             }
 
@@ -128,19 +129,19 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
                 $direction = 'ASC';
             }
 
-            $tSorts[] = [
-                'sort' => $sort,
-                'direction' => $direction,
-            ];
+            $sorts[] = new SortCriteria(
+                field: $field,
+                direction: $direction,
+            );
         }
 
-        return $tSorts;
+        return $sorts;
     }
 
     /**
      * @param TSearch|null $search
      *
-     * @return array{0: array<string, list<TWhere>>, 1: array<string, array<string, list<TWhere>>>}|null
+     * @return array{0: array<string, list<WhereCriteria>>, 1: array<string, array<string, list<WhereCriteria>>>}|null
      */
     protected function getWhereFilters(?array $search): ?array
     {
@@ -151,16 +152,20 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
             return null;
         }
 
-        /** @var array<string, list<TWhere>|array<string, list<TWhere>>> $whereFilters */
+        /** @var array<string, list<WhereCriteria>|array<string, list<WhereCriteria>>> $whereFilters */
         $whereFilters = $clauseFilters;
         $compositeWhereFilters = [];
+
         foreach ($clauseFilters as $searchKey => $filters) {
             if (SearchFilter::isCompositeEncodedFilter($searchKey)) {
+                /** @var array<string, list<WhereCriteria>> $filters */
                 $compositeWhereFilters[$searchKey] = $filters;
                 unset($whereFilters[$searchKey]);
             }
         }
 
+        /** @var array<string, list<WhereCriteria>> $whereFilters */
+        /** @var array<string, array<string, list<WhereCriteria>>> $compositeWhereFilters */
         return [$whereFilters, $compositeWhereFilters];
     }
 

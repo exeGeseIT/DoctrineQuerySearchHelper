@@ -1,91 +1,73 @@
 parameters:
-	ignoreErrors:
-		-
-			message: '#^Method ExeGeseIT\\DoctrineQuerySearchHelper\\Builder\\AbstractClauseBuilderProcessor\:\:getWhereFilters\(\) should return array\{array\<string, list\<array\{expFn\: ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn, value\: float\|int\|list\<float\|int\|string\>\|string, escapedLike\?\: bool\}\>\>, array\<string, array\<string, list\<array\{expFn\: ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn, value\: float\|int\|list\<float\|int\|string\>\|string, escapedLike\?\: bool\}\>\>\>\}\|null but returns array\{array\<string, array\<int\<0, max\>\|string, array\<''escapedLike''\|''expFn''\|''value''\|int\<0, max\>, array\<''escapedLike''\|''expFn''\|''value''\|int\<0, max\>, bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|string\>\>\>, array\<string, array\<int\<0, max\>\|string, array\<''escapedLike''\|''expFn''\|''value''\|int\<0, max\>, array\<''escapedLike''\|''expFn''\|''value''\|int\<0, max\>, bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|string\>\>\>\}\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Builder/AbstractClauseBuilderProcessor.php
+    ignoreErrors:
+        -
+            message: '#^Cannot cast mixed to string\.$#'
+            identifier: cast.string
+            paths:
+                - src/Builder/DBALClauseBuilder.php
+                - tests/Builder/DQLClauseBuilderTest.php
+        -
+            message: '#^PHPDoc tag @var with type array\<string, array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\> is not subtype of type array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\.$#'
+            identifier: varTag.type
+            count: 1
+            path: src/Builder/DBALClauseBuilder.php
 
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: src/Builder/DBALClauseBuilder.php
+        -
+            message: '#^PHPDoc tag @var with type array\<string, array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\> is not subtype of type array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\.$#'
+            identifier: varTag.type
+            count: 1
+            path: src/Builder/DQLClauseBuilder.php
 
-		-
-			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Builder/DBALClauseBuilder.php
+        -
+            message: '#^Offset 1 might not exist on array\{\}\|array\{non\-falsy\-string, non\-empty\-string\}\.$#'
+            identifier: offsetAccess.notFound
+            count: 1
+            path: src/QueryClauseBuilder.php
 
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: src/Builder/DQLClauseBuilder.php
+        -
+            message: '#^Parameter \#2 \$filterExprFn of method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:addClauseFilter\(\) expects ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn, bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string given\.$#'
+            identifier: argument.type
+            count: 1
+            path: src/SearchHelper.php
 
-		-
-			message: '#^Parameter \#1 \$arg of method Doctrine\\ORM\\Query\\Expr\\Base\:\:add\(\) expects string\|Stringable\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Builder/DQLClauseBuilder.php
+        -
+            message: '#^Parameter \#2 \$value of method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:processFilter\(\) expects float\|int\|list\<float\|int\|string\>\|string, non\-empty\-array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|float\|int\|string given\.$#'
+            identifier: argument.type
+            count: 1
+            path: src/SearchHelper.php
 
-		-
-			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Builder/DQLClauseBuilder.php
+        -
+            message: '#^Parameter \#3 \$value of method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:addClauseFilter\(\) expects float\|int\|list\<float\|int\|string\>\|string, bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string given\.$#'
+            identifier: argument.type
+            count: 1
+            path: src/SearchHelper.php
 
-		-
-			message: '#^Offset 1 might not exist on array\{\}\|array\{non\-falsy\-string, non\-empty\-string\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: src/QueryClauseBuilder.php
+        -
+            message: '#^Parameter \#4 \$escapedLike of method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:addClauseFilter\(\) expects bool, bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string given\.$#'
+            identifier: argument.type
+            count: 1
+            path: src/SearchHelper.php
 
-		-
-			message: '#^Parameter \#2 \$filterExprFn of method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:addClauseFilter\(\) expects ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn, ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/SearchHelper.php
+        -
+            message: '#^Property ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:\$clauseFilters \(array\<string, array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\>\) does not accept non\-empty\-array\<string, array\<int\<0, max\>\|string, array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\|ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\.$#'
+            identifier: assign.propertyType
+            count: 1
+            path: src/SearchHelper.php
 
-		-
-			message: '#^Parameter \#2 \$value of method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:processFilter\(\) expects float\|int\|list\<float\|int\|string\>\|string, array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|float\|int\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/SearchHelper.php
+        -
+            message: '#^Parameter \#1 \$search of method ExeGeseIT\\DoctrineQuerySearchHelper\\Builder\\DQLClauseBuilder\:\:getQueryBuilder\(\) expects array\<string, array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|float\|int\|string\>\|null, array\<string, mixed\> given\.$#'
+            identifier: argument.type
+            count: 1
+            path: tests/Repository/DatawarehouseRepository.php
 
-		-
-			message: '#^Parameter \#3 \$value of method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:addClauseFilter\(\) expects float\|int\|list\<float\|int\|string\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/SearchHelper.php
+        -
+            message: '#^Parameter \#1 \$search of method ExeGeseIT\\DoctrineQuerySearchHelper\\Builder\\DQLClauseBuilder\:\:getQueryBuilder\(\) expects array\<string, array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|float\|int\|string\>\|null, array\<string, mixed\> given\.$#'
+            identifier: argument.type
+            count: 1
+            path: tests/Repository/DatawarehouseaccountingRepository.php
 
-		-
-			message: '#^Parameter \#4 \$escapedLike of method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:addClauseFilter\(\) expects bool, ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/SearchHelper.php
-
-		-
-			message: '#^Property ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:\$clauseFilters \(array\<string, array\<int\<0, max\>\|string, array\<''escapedLike''\|''expFn''\|''value''\|int\<0, max\>, array\<''escapedLike''\|''expFn''\|''value''\|int\<0, max\>, bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|string\>\>\>\) does not accept non\-empty\-array\<string, array\<int\<0, max\>\|string, array\<int\<0, max\>\|string, array\<''escapedLike''\|''expFn''\|''value''\|int\<0, max\>, array\<''escapedLike''\|''expFn''\|''value''\|int\<0, max\>, bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|string\>\|bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|string\>\>\>\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: src/SearchHelper.php
-
-		-
-			message: '#^Parameter \#1 \$search of method ExeGeseIT\\DoctrineQuerySearchHelper\\Builder\\DQLClauseBuilder\:\:getQueryBuilder\(\) expects array\<string, array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|float\|int\|string\>\|null, array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/Repository/DatawarehouseRepository.php
-
-		-
-			message: '#^Parameter \#1 \$search of method ExeGeseIT\\DoctrineQuerySearchHelper\\Builder\\DQLClauseBuilder\:\:getQueryBuilder\(\) expects array\<string, array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|float\|int\|string\>\|null, array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/Repository/DatawarehouseaccountingRepository.php
-
-		-
-			message: '#^Call to an undefined method Doctrine\\ORM\\EntityRepository\<ExeGeseIT\\Test\\Entity\\Datawarehouseaccounting\>\:\:fetchDatawarehouseaccountingQb\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: tests/test2.php
+        -
+            message: '#^Call to an undefined method Doctrine\\ORM\\EntityRepository\<ExeGeseIT\\Test\\Entity\\Datawarehouseaccounting\>\:\:fetchDatawarehouseaccountingQb\(\)\.$#'
+            identifier: method.notFound
+            count: 1
+            path: tests/test2.php

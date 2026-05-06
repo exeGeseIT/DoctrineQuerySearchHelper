@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ExeGeseIT\DoctrineQuerySearchHelper;
 
+use ExeGeseIT\DoctrineQuerySearchHelper\ValueObject\WhereCriteria;
 use Nette\Utils\Json;
 
 /**
@@ -11,8 +12,6 @@ use Nette\Utils\Json;
  *
  * @phpstan-type TSearchvalue float|int|string|list<float|int|string>
  * @phpstan-type TSearch array<string, bool|TSearchvalue|array<string, bool|TSearchvalue>>
- * @phpstan-type TWhere  array{'expFn': FilterExprFn, 'value': TSearchvalue, 'escapedLike'?: bool}
- * @phpstan-type TSort array{'sort': string, 'direction': string}
  */
 final class SearchHelper
 {
@@ -26,7 +25,7 @@ final class SearchHelper
     public const LIKE_ESCAPE_CHARACTER = '\\';
 
     /**
-     * @var array<string, list<TWhere>>|non-empty-array<string, array<string, list<TWhere>>>
+     * @var array<string, list<WhereCriteria>>|non-empty-array<string, array<string, list<WhereCriteria>>>
      */
     private array $clauseFilters = [];
 
@@ -39,7 +38,7 @@ final class SearchHelper
     }
 
     /**
-     * @return array<string, list<TWhere>>|array<string, array<string, list<TWhere>>>
+     * @return array<string, list<WhereCriteria>>|array<string, array<string, list<WhereCriteria>>>
      */
     public function getClauseFilters(): array
     {
@@ -139,15 +138,15 @@ final class SearchHelper
                 continue;
             }
 
-            [$expFn, $processedValue, $escapedLike] = array_pad($filterResult, 3, false);
-            $this->addClauseFilter($key, $expFn, $processedValue, $escapedLike);
+            [$filterExprFn, $processedValue, $escapedLike] = array_pad($filterResult, 3, false);
+            $this->addClauseFilter($key, $filterExprFn, $processedValue, $escapedLike);
         }
     }
 
     /**
      * @param bool|TSearchvalue|array<string, bool|TSearchvalue> $value
      *
-     * @phpstan-assert-if-true =array<string, bool|TSearchvalue> $value
+     * @phpstan-assert-if-true array<string, bool|TSearchvalue> $value
      */
     private function isCompositeFilterValue(mixed $value): bool
     {
@@ -166,11 +165,11 @@ final class SearchHelper
     /**
      * @param TSearchvalue $value
      *
-     * @return array{0: FilterExprFn, 1: TSearchvalue}|null
+     * @return array{0: FilterExprFn, 1: TSearchvalue, 2?: bool}|null
      */
     private function processFilter(string $filter, mixed $value): ?array
     {
-        if ($this->isFalsyValue($value) && (SearchFilter::FILTER === $filter)) {
+        if ($this->isFalsyValue($value) && SearchFilter::FILTER === $filter) {
             return null;
         }
 
@@ -199,16 +198,11 @@ final class SearchHelper
             $this->clauseFilters[$key] = [];
         }
 
-        $criteria = [
-            'expFn' => $filterExprFn,
-            'value' => $value,
-        ];
-
-        if ($escapedLike) {
-            $criteria['escapedLike'] = true;
-        }
-
-        $this->clauseFilters[$key][] = $criteria;
+        $this->clauseFilters[$key][] = new WhereCriteria(
+            filterExprFn: $filterExprFn,
+            value: $value,
+            escapedLike: $escapedLike,
+        );
     }
 
     /**

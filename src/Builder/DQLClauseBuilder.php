@@ -10,6 +10,7 @@ use Doctrine\ORM\QueryBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\FilterExprFn;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
+use ExeGeseIT\DoctrineQuerySearchHelper\ValueObject\WhereCriteria;
 
 /**
  * Constructeur de clauses DQL pour la construction de requêtes Doctrine.
@@ -20,7 +21,6 @@ use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
  * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
  *
  * @phpstan-import-type TSearch from SearchHelper
- * @phpstan-import-type TWhere from SearchHelper
  *
  * @extends AbstractClauseBuilderProcessor<QueryBuilder>
  */
@@ -59,7 +59,7 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
     }
 
     /**
-     * @param array<string, list<TWhere>> $whereFilters
+     * @param array<string, list<WhereCriteria>> $whereFilters
      */
     private function processSimpleWhereFilters(array $whereFilters): void
     {
@@ -77,19 +77,17 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
         }
     }
 
-    /**
-     * @param TWhere $criteria
-     */
-    private function addWhereCondition(string $field, string $parameterKey, array $criteria): void
+    private function addWhereCondition(string $field, string $parameterKey, WhereCriteria $whereCriteria): void
     {
-        $expFn = $criteria['expFn'];
-        $value = $criteria['value'];
+        if ($whereCriteria->shouldExpandArrayAsOrConditions()) {
+            /** @var list<int|float|string> $value */
+            $value = $whereCriteria->value;
+            $this->handleArrayValue($field, $parameterKey, $whereCriteria->filterExprFn, $value, $whereCriteria->escapedLike);
 
-        if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($value)) {
-            $this->handleArrayValue($field, $parameterKey, $expFn, $value, $criteria['escapedLike'] ?? false);
-        } else {
-            $this->handleSingleValue($field, $parameterKey, $expFn, $value, $criteria['escapedLike'] ?? false);
+            return;
         }
+
+        $this->handleSingleValue($field, $parameterKey, $whereCriteria->filterExprFn, $whereCriteria->value, $whereCriteria->escapedLike);
     }
 
     /**
@@ -98,8 +96,9 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
     private function handleArrayValue(string $field, string $parameterKey, FilterExprFn $filterExprFn, array $values, bool $escapedLike = false): void
     {
         $orx = $this->queryBuilder->expr()->orX();
-        foreach ($values as $i => $value) {
-            $parameter = sprintf('%s_%d', $parameterKey, $i);
+
+        foreach ($values as $index => $value) {
+            $parameter = sprintf('%s_%d', $parameterKey, $index);
             $this->queryBuilder->setParameter($parameter, $value);
 
             $orx->add($this->buildExpression($field, ':'.$parameter, $filterExprFn, $escapedLike));
@@ -121,7 +120,10 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
 
     private function buildExpression(string $field, string $parameter, FilterExprFn $filterExprFn, bool $escapedLike = false): string
     {
-        $expression = $this->queryBuilder->expr()->{$filterExprFn->value()}($field, $parameter);
+        $expression = match ($filterExprFn) {
+            FilterExprFn::IsNull, FilterExprFn::IsNotNull => $this->queryBuilder->expr()->{$filterExprFn->value}($field),
+            default => $this->queryBuilder->expr()->{$filterExprFn->value}($field, $parameter),
+        };
 
         if ($escapedLike && in_array($filterExprFn, [FilterExprFn::Like, FilterExprFn::NotLike], true)) {
             return sprintf("%s ESCAPE '%s'", $expression, SearchHelper::LIKE_ESCAPE_CHARACTER);
@@ -131,7 +133,7 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
     }
 
     /**
-     * @param array<string, array<string, mixed>> $compositeWhereFilters
+     * @param array<string, array<string, list<WhereCriteria>>> $compositeWhereFilters
      */
     private function processCompositeWhereFilters(array $compositeWhereFilters): void
     {
@@ -141,9 +143,7 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
     }
 
     /**
-     * array<string, list<TWhere>|array<string, list<TWhere>> $compositeFilters.
-     *
-     * @param array<string, mixed> $compositeFilters
+     * @param array<string, list<WhereCriteria>|array<string, list<WhereCriteria>>> $compositeFilters
      */
     private function addCompositePart(string $encodedCompositeKey, array $compositeFilters): void
     {
@@ -161,9 +161,7 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
     }
 
     /**
-     * array<string, list<TWhere>|array<string, list<TWhere>> $compositeFilters.
-     *
-     * @param array<string, mixed> $compositeFilters
+     * @param array<string, list<WhereCriteria>|array<string, list<WhereCriteria>>> $compositeFilters
      */
     private function getCompositeDQLStatement(string $encodedCompositeKey, array $compositeFilters): Composite
     {
@@ -172,11 +170,8 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
         $token = $demuxedFilter['key'];
 
         [$radicalKey, $compositeStatement] = match ($compositeFilterKey) {
-            // .. AND (field1 ... OR field2 ...)
             SearchFilter::COMPOSITE_AND_OR => ['ANDOR', $this->queryBuilder->expr()->orX()],
-            // .. OR (field1 ... AND field2 ...)
             SearchFilter::COMPOSITE_OR => ['OR', $this->queryBuilder->expr()->andX()],
-            // SearchFilter::COMPOSITE_AND = .. AND (field1 ... AND field2 ...)
             default => ['AND', $this->queryBuilder->expr()->andX()],
         };
 
@@ -190,39 +185,39 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
                     continue;
                 }
 
-                /** @var array<string, mixed> $stack */
+                /** @var array<string, list<WhereCriteria>|array<string, list<WhereCriteria>>> $stack */
                 $compositeStatement->add($this->getCompositeDQLStatement($searchKey, $stack));
                 continue;
             }
 
-            /**
-             * @var list<TWhere> $stack
-             */
+            /** @var list<WhereCriteria> $stack */
             foreach ($stack as $index => $criteria) {
-                $_searchKey = sprintf('%s_%s_i%d', $radical, $searchKey, $index);
-                $expFn = $criteria['expFn'];
-                $value = $criteria['value'];
+                $searchKeyParameter = sprintf('%s_%s_i%d', $radical, $searchKey, $index);
 
-                if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($value)) {
+                if ($criteria->shouldExpandArrayAsOrConditions()) {
+                    /** @var list<int|float|string> $value */
+                    $value = $criteria->value;
                     $orStatements = $this->queryBuilder->expr()->orX();
-                    foreach ($value as $i => $pattern) {
-                        $parameter = sprintf('%s_%d', $_searchKey, $i);
+
+                    foreach ($value as $valueIndex => $pattern) {
+                        $parameter = sprintf('%s_%d', $searchKeyParameter, $valueIndex);
+                        $this->queryBuilder->setParameter($parameter, $pattern);
+
                         $orStatements->add(
-                            $this->queryBuilder
-                                ->setParameter($parameter, $pattern)
-                                ->expr()->{$expFn->value()}($field, ':'.$parameter)
+                            $this->buildExpression($field, ':'.$parameter, $criteria->filterExprFn, $criteria->escapedLike)
                         );
                     }
 
                     $compositeStatement->add($orStatements);
-                } else {
-                    $compositeStatement->add(
-                        $this->queryBuilder->expr()->{$expFn->value()}($field, ':'.$_searchKey)
-                    );
+                    continue;
+                }
 
-                    if (SearchHelper::NULL_VALUE !== $value) {
-                        $this->queryBuilder->setParameter($_searchKey, $value);
-                    }
+                $compositeStatement->add(
+                    $this->buildExpression($field, ':'.$searchKeyParameter, $criteria->filterExprFn, $criteria->escapedLike)
+                );
+
+                if (SearchHelper::NULL_VALUE !== $criteria->value) {
+                    $this->queryBuilder->setParameter($searchKeyParameter, $criteria->value);
                 }
             }
         }
@@ -232,24 +227,27 @@ class DQLClauseBuilder extends AbstractClauseBuilderProcessor
 
     private function initializeDQLOrderby(?string $paginatorSort): void
     {
-        $tSorts = $this->normalizePaginatorSort($paginatorSort ?? '');
+        $sorts = $this->normalizePaginatorSort($paginatorSort ?? '');
 
-        if ([] !== $tSorts) {
-            $_initial_order = $this->queryBuilder->getDQLPart('orderBy');
+        if ([] === $sorts) {
+            return;
+        }
 
-            if (!is_iterable($_initial_order)) {
-                $_initial_order = [$_initial_order];
-            }
+        $initialOrder = $this->queryBuilder->getDQLPart('orderBy');
 
-            $this->queryBuilder->resetDQLPart('orderBy');
-            foreach ($tSorts as $tSort) {
-                $this->queryBuilder->addOrderBy($tSort['sort'], $tSort['direction']);
-            }
+        if (!is_iterable($initialOrder)) {
+            $initialOrder = [$initialOrder];
+        }
 
-            /** @var OrderBy $sort */
-            foreach ($_initial_order as $sort) {
-                $this->queryBuilder->addOrderBy($sort);
-            }
+        $this->queryBuilder->resetDQLPart('orderBy');
+
+        foreach ($sorts as $sort) {
+            $this->queryBuilder->addOrderBy($sort->field, $sort->direction);
+        }
+
+        /** @var OrderBy $sort */
+        foreach ($initialOrder as $sort) {
+            $this->queryBuilder->addOrderBy($sort);
         }
     }
 }

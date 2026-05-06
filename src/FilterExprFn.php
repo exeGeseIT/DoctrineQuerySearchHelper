@@ -18,9 +18,4 @@ enum FilterExprFn: string
     case NotLike = 'notLike';
     case IsNull = 'isNull';
     case IsNotNull = 'isNotNull';
-
-    public function value(): string
-    {
-        return $this->value;
-    }
 }

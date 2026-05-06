@@ -7,6 +7,7 @@ namespace ExeGeseIT\Test;
 use ExeGeseIT\DoctrineQuerySearchHelper\FilterExprFn;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
+use ExeGeseIT\DoctrineQuerySearchHelper\ValueObject\WhereCriteria;
 use PHPUnit\Framework\TestCase;
 
 final class SearchHelperTest extends TestCase
@@ -87,14 +88,14 @@ final class SearchHelperTest extends TestCase
             SearchFilter::like('name', false) => 'John',
         ]);
 
-        self::assertSame(
+        self::assertEquals(
             [
                 'name' => [
-                    [
-                        'expFn' => FilterExprFn::Like,
-                        'value' => '%john%',
-                        'escapedLike' => true,
-                    ],
+                    new WhereCriteria(
+                        filterExprFn: FilterExprFn::Like,
+                        value: '%john%',
+                        escapedLike: true,
+                    ),
                 ],
             ],
             $searchHelper->getClauseFilters()
@@ -107,14 +108,14 @@ final class SearchHelperTest extends TestCase
             SearchFilter::notLike('name', false) => 'John',
         ]);
 
-        self::assertSame(
+        self::assertEquals(
             [
                 'name' => [
-                    [
-                        'expFn' => FilterExprFn::NotLike,
-                        'value' => '%john%',
-                        'escapedLike' => true,
-                    ],
+                    new WhereCriteria(
+                        filterExprFn: FilterExprFn::NotLike,
+                        value: '%john%',
+                        escapedLike: true,
+                    ),
                 ],
             ],
             $searchHelper->getClauseFilters()
@@ -127,13 +128,13 @@ final class SearchHelperTest extends TestCase
             SearchFilter::likeStrict('name', false) => 'John%',
         ]);
 
-        self::assertSame(
+        self::assertEquals(
             [
                 'name' => [
-                    [
-                        'expFn' => FilterExprFn::Like,
-                        'value' => 'John%',
-                    ],
+                    new WhereCriteria(
+                        filterExprFn: FilterExprFn::Like,
+                        value: 'John%',
+                    ),
                 ],
             ],
             $searchHelper->getClauseFilters()
@@ -146,13 +147,13 @@ final class SearchHelperTest extends TestCase
             SearchFilter::notLikeStrict('name', false) => 'John%',
         ]);
 
-        self::assertSame(
+        self::assertEquals(
             [
                 'name' => [
-                    [
-                        'expFn' => FilterExprFn::NotLike,
-                        'value' => 'John%',
-                    ],
+                    new WhereCriteria(
+                        filterExprFn: FilterExprFn::NotLike,
+                        value: 'John%',
+                    ),
                 ],
             ],
             $searchHelper->getClauseFilters()
@@ -165,13 +166,13 @@ final class SearchHelperTest extends TestCase
             SearchFilter::equal('age', false) => 42,
         ]);
 
-        self::assertSame(
+        self::assertEquals(
             [
                 'age' => [
-                    [
-                        'expFn' => FilterExprFn::Equal,
-                        'value' => 42,
-                    ],
+                    new WhereCriteria(
+                        filterExprFn: FilterExprFn::Equal,
+                        value: 42,
+                    ),
                 ],
             ],
             $searchHelper->getClauseFilters()
@@ -184,13 +185,13 @@ final class SearchHelperTest extends TestCase
             SearchFilter::equal('id', false) => [1, 2, 3],
         ]);
 
-        self::assertSame(
+        self::assertEquals(
             [
                 'id' => [
-                    [
-                        'expFn' => FilterExprFn::In,
-                        'value' => [1, 2, 3],
-                    ],
+                    new WhereCriteria(
+                        filterExprFn: FilterExprFn::In,
+                        value: [1, 2, 3],
+                    ),
                 ],
             ],
             $searchHelper->getClauseFilters()
@@ -203,13 +204,13 @@ final class SearchHelperTest extends TestCase
             SearchFilter::notEqual('id', false) => [1, 2, 3],
         ]);
 
-        self::assertSame(
+        self::assertEquals(
             [
                 'id' => [
-                    [
-                        'expFn' => FilterExprFn::NotIn,
-                        'value' => [1, 2, 3],
-                    ],
+                    new WhereCriteria(
+                        filterExprFn: FilterExprFn::NotIn,
+                        value: [1, 2, 3],
+                    ),
                 ],
             ],
             $searchHelper->getClauseFilters()
@@ -222,13 +223,13 @@ final class SearchHelperTest extends TestCase
             SearchFilter::null('deletedAt', false) => true,
         ]);
 
-        self::assertSame(
+        self::assertEquals(
             [
                 'deletedAt' => [
-                    [
-                        'expFn' => FilterExprFn::IsNull,
-                        'value' => SearchHelper::NULL_VALUE,
-                    ],
+                    new WhereCriteria(
+                        filterExprFn: FilterExprFn::IsNull,
+                        value: SearchHelper::NULL_VALUE,
+                    ),
                 ],
             ],
             $searchHelper->getClauseFilters()
@@ -250,13 +251,13 @@ final class SearchHelperTest extends TestCase
             SearchFilter::filter('name', false) => 'John',
         ]);
 
-        self::assertSame(
+        self::assertEquals(
             [
                 'name' => [
-                    [
-                        'expFn' => FilterExprFn::Equal,
-                        'value' => 'John',
-                    ],
+                    new WhereCriteria(
+                        filterExprFn: FilterExprFn::Equal,
+                        value: 'John',
+                    ),
                 ],
             ],
             $searchHelper->getClauseFilters()

@@ -65,18 +65,44 @@ final class SearchHelper
      *
      * @return ($searched is iterable ? list<string> : string)
      */
-    public static function sqlSearchString(mixed $searched, bool $strict = false): string|array
-    {
+    public static function sqlSearchString(
+        mixed $searched,
+        bool $strict = false,
+        bool $lowercase = true,
+        bool $trim = true,
+    ): string|array {
         $strings = [];
         $stack = is_iterable($searched) ? $searched : [$searched];
+
         foreach ($stack as $searchedValue) {
-            $strings[] = match ($strict) {
-                true => (string) $searchedValue,
-                default => sprintf('%%%s%%', str_replace(['%', '_', '\\'], ['\%', '\_', '\\\\'], trim(\mb_strtolower((string) $searchedValue)))),
-            };
+            $value = (string) $searchedValue;
+
+            if ($strict) {
+                $strings[] = $value;
+                continue;
+            }
+
+            if ($trim) {
+                $value = trim($value);
+            }
+
+            if ($lowercase) {
+                $value = \mb_strtolower($value);
+            }
+
+            $strings[] = sprintf('%%%s%%', self::escapeLikePattern($value));
         }
 
         return is_iterable($searched) ? $strings : $strings[0];
+    }
+
+    private static function escapeLikePattern(string $value): string
+    {
+        return strtr($value, [
+            '\\' => '\\\\',
+            '%' => '\\%',
+            '_' => '\\_',
+        ]);
     }
 
     /**

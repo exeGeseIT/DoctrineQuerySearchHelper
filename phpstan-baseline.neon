@@ -3,9 +3,8 @@ parameters:
         -
             message: '#^Cannot cast mixed to string\.$#'
             identifier: cast.string
-            paths:
-                - src/Builder/DBALClauseBuilder.php
-                - tests/Builder/DQLClauseBuilderTest.php
+            path: tests/Builder/DQLClauseBuilderTest.php
+
         -
             message: '#^PHPDoc tag @var with type array\<string, array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\> is not subtype of type array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\.$#'
             identifier: varTag.type

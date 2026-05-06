@@ -128,13 +128,18 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
 
     private function buildExpression(string $field, string $parameter, FilterExprFn $filterExprFn, bool $escapedLike = false): string
     {
-        $escapeChar = $escapedLike ? SearchHelper::LIKE_ESCAPE_CHARACTER : null;
+        $escapeChar = $escapedLike ? $this->quoteLikeEscapeCharacter() : null;
 
-        return (string) match ($filterExprFn) {
-            FilterExprFn::IsNull, FilterExprFn::IsNotNull => $this->queryBuilder->expr()->{$filterExprFn}($field),
-            FilterExprFn::Like, FilterExprFn::NotLike => $this->queryBuilder->expr()->{$filterExprFn}($field, $parameter, $escapeChar),
-            default => $this->queryBuilder->expr()->{$filterExprFn}($field, $parameter),
+        return match ($filterExprFn) {
+            FilterExprFn::IsNull, FilterExprFn::IsNotNull => $this->queryBuilder->expr()->{$filterExprFn->value}($field),
+            FilterExprFn::Like, FilterExprFn::NotLike => $this->queryBuilder->expr()->{$filterExprFn->value}($field, $parameter, $escapeChar),
+            default => $this->queryBuilder->expr()->{$filterExprFn->value}($field, $parameter),
         };
+    }
+
+    private function quoteLikeEscapeCharacter(): string
+    {
+        return "'".str_replace("'", "''", SearchHelper::LIKE_ESCAPE_CHARACTER)."'";
     }
 
     private function resolveParameterType(mixed $value): ArrayParameterType|ParameterType

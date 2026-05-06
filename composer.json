@@ -20,6 +20,7 @@
         "phpstan/phpstan": "^2.0",
         "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0",
+        "phpunit/phpunit": "^10.5",
         "rector/rector": "^2.0",
         "symfony/cache": "^6.4",
         "symplify/easy-coding-standard": "^13.1",
@@ -34,7 +35,7 @@
         "cs:ecs": "@php vendor/bin/ecs check --ansi",
         "cs:ecs:fix": "@php vendor/bin/ecs check --fix --ansi",
 
-        "test": "@php test/test2.php"
+        "test": "@php vendor/bin/phpunit --colors=always"
     },
     "config": {
         "allow-plugins": {
@@ -51,7 +52,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "ExeGeseIT\\Test\\": "test/"
+            "ExeGeseIT\\Test\\": "tests/"
         }
     }
 }

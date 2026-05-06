@@ -14,7 +14,7 @@ return RectorConfig::configure()
     ->withCache(cacheDirectory: __DIR__.'/tmp/rector')
     ->withPaths([
         __DIR__.'/src',
-        __DIR__.'/Test',
+        __DIR__.'/tests',
     ])
     ->withRootFiles()
     ->withImportNames(importShortClasses: false, removeUnusedImports: true)

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__.'/../vendor/autoload.php';
 
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
@@ -36,6 +36,7 @@ $searchData = [
     SearchFilter::equal('type') => 'BUDGET',
     SearchFilter::equal('extra1') => 'Frais Generaux',
     SearchFilter::equal('extra2') => 'Frais Generaux',
+    SearchFilter::like('extra3') => 'Projet',
     SearchFilter::andOr() => [
         SearchFilter::equal('glaccount') => '64510000 - COTISATIONS URSSAF',
         SearchFilter::equal('glaccount') => '',

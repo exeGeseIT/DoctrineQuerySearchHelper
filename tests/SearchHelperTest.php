@@ -16,6 +16,11 @@ final class SearchHelperTest extends TestCase
         self::assertSame('%foo\\%bar\\_baz\\\\qux%', SearchHelper::sqlSearchString(' Foo%Bar_Baz\\Qux '));
     }
 
+    public function testItEscapesLikeEscapeCharacter(): void
+    {
+        self::assertSame('%foo\\\\bar%', SearchHelper::sqlSearchString('foo\\bar'));
+    }
+
     public function testItEscapesSqlSearchStringWithoutLowercasing(): void
     {
         self::assertSame('%Foo\\%Bar\\_Baz\\\\Qux%', SearchHelper::sqlSearchString(' Foo%Bar_Baz\\Qux ', lowercase: false));
@@ -78,7 +83,7 @@ final class SearchHelperTest extends TestCase
 
     public function testItProcessesLikeFilter(): void
     {
-        $helper = new SearchHelper([
+        $searchHelper = new SearchHelper([
             SearchFilter::like('name', false) => 'John',
         ]);
 
@@ -88,16 +93,75 @@ final class SearchHelperTest extends TestCase
                     [
                         'expFn' => FilterExprFn::Like,
                         'value' => '%john%',
+                        'escapedLike' => true,
                     ],
                 ],
             ],
-            $helper->getClauseFilters()
+            $searchHelper->getClauseFilters()
+        );
+    }
+
+    public function testItProcessesNotLikeFilter(): void
+    {
+        $searchHelper = new SearchHelper([
+            SearchFilter::notLike('name', false) => 'John',
+        ]);
+
+        self::assertSame(
+            [
+                'name' => [
+                    [
+                        'expFn' => FilterExprFn::NotLike,
+                        'value' => '%john%',
+                        'escapedLike' => true,
+                    ],
+                ],
+            ],
+            $searchHelper->getClauseFilters()
+        );
+    }
+
+    public function testItProcessesLikeStrictFilterWithoutEscapedLikeFlag(): void
+    {
+        $searchHelper = new SearchHelper([
+            SearchFilter::likeStrict('name', false) => 'John%',
+        ]);
+
+        self::assertSame(
+            [
+                'name' => [
+                    [
+                        'expFn' => FilterExprFn::Like,
+                        'value' => 'John%',
+                    ],
+                ],
+            ],
+            $searchHelper->getClauseFilters()
+        );
+    }
+
+    public function testItProcessesNotLikeStrictFilterWithoutEscapedLikeFlag(): void
+    {
+        $searchHelper = new SearchHelper([
+            SearchFilter::notLikeStrict('name', false) => 'John%',
+        ]);
+
+        self::assertSame(
+            [
+                'name' => [
+                    [
+                        'expFn' => FilterExprFn::NotLike,
+                        'value' => 'John%',
+                    ],
+                ],
+            ],
+            $searchHelper->getClauseFilters()
         );
     }
 
     public function testItProcessesEqualFilter(): void
     {
-        $helper = new SearchHelper([
+        $searchHelper = new SearchHelper([
             SearchFilter::equal('age', false) => 42,
         ]);
 
@@ -110,13 +174,13 @@ final class SearchHelperTest extends TestCase
                     ],
                 ],
             ],
-            $helper->getClauseFilters()
+            $searchHelper->getClauseFilters()
         );
     }
 
     public function testItProcessesArrayAsInFilter(): void
     {
-        $helper = new SearchHelper([
+        $searchHelper = new SearchHelper([
             SearchFilter::equal('id', false) => [1, 2, 3],
         ]);
 
@@ -129,13 +193,13 @@ final class SearchHelperTest extends TestCase
                     ],
                 ],
             ],
-            $helper->getClauseFilters()
+            $searchHelper->getClauseFilters()
         );
     }
 
     public function testItProcessesNotEqualArrayAsNotInFilter(): void
     {
-        $helper = new SearchHelper([
+        $searchHelper = new SearchHelper([
             SearchFilter::notEqual('id', false) => [1, 2, 3],
         ]);
 
@@ -148,13 +212,13 @@ final class SearchHelperTest extends TestCase
                     ],
                 ],
             ],
-            $helper->getClauseFilters()
+            $searchHelper->getClauseFilters()
         );
     }
 
     public function testItProcessesNullFilter(): void
     {
-        $helper = new SearchHelper([
+        $searchHelper = new SearchHelper([
             SearchFilter::null('deletedAt', false) => true,
         ]);
 
@@ -167,22 +231,22 @@ final class SearchHelperTest extends TestCase
                     ],
                 ],
             ],
-            $helper->getClauseFilters()
+            $searchHelper->getClauseFilters()
         );
     }
 
     public function testItIgnoresEmptyConditionalFilter(): void
     {
-        $helper = new SearchHelper([
+        $searchHelper = new SearchHelper([
             SearchFilter::filter('name', false) => '',
         ]);
 
-        self::assertSame([], $helper->getClauseFilters());
+        self::assertSame([], $searchHelper->getClauseFilters());
     }
 
     public function testItProcessesNonEmptyConditionalFilterAsEqualFilter(): void
     {
-        $helper = new SearchHelper([
+        $searchHelper = new SearchHelper([
             SearchFilter::filter('name', false) => 'John',
         ]);
 
@@ -195,7 +259,7 @@ final class SearchHelperTest extends TestCase
                     ],
                 ],
             ],
-            $helper->getClauseFilters()
+            $searchHelper->getClauseFilters()
         );
     }
 }

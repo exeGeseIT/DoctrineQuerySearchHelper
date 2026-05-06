@@ -11,12 +11,19 @@ use Nette\Utils\Json;
  *
  * @phpstan-type TSearchvalue float|int|string|list<float|int|string>
  * @phpstan-type TSearch array<string, bool|TSearchvalue|array<string, bool|TSearchvalue>>
- * @phpstan-type TWhere  array{'expFn': FilterExprFn, 'value': TSearchvalue}
+ * @phpstan-type TWhere  array{'expFn': FilterExprFn, 'value': TSearchvalue, 'escapedLike'?: bool}
  * @phpstan-type TSort array{'sort': string, 'direction': string}
  */
 final class SearchHelper
 {
     public const NULL_VALUE = '_NULL_';
+
+    /**
+     * SQL LIKE escape character.
+     *
+     * Must be a single character because SQL ESCAPE expects one character.
+     */
+    public const LIKE_ESCAPE_CHARACTER = '\\';
 
     /**
      * @var array<string, list<TWhere>>|non-empty-array<string, array<string, list<TWhere>>>
@@ -98,10 +105,12 @@ final class SearchHelper
 
     private static function escapeLikePattern(string $value): string
     {
+        $escapeCharacter = self::LIKE_ESCAPE_CHARACTER;
+
         return strtr($value, [
-            '\\' => '\\\\',
-            '%' => '\\%',
-            '_' => '\\_',
+            $escapeCharacter => $escapeCharacter.$escapeCharacter,
+            '%' => $escapeCharacter.'%',
+            '_' => $escapeCharacter.'_',
         ]);
     }
 
@@ -130,8 +139,8 @@ final class SearchHelper
                 continue;
             }
 
-            [$expFn, $processedValue] = $filterResult;
-            $this->addClauseFilter($key, $expFn, $processedValue);
+            [$expFn, $processedValue, $escapedLike] = array_pad($filterResult, 3, false);
+            $this->addClauseFilter($key, $expFn, $processedValue, $escapedLike);
         }
     }
 
@@ -168,10 +177,10 @@ final class SearchHelper
         return match ($filter) {
             SearchFilter::NULL => [FilterExprFn::IsNull, self::NULL_VALUE],
             SearchFilter::NOT_NULL => [FilterExprFn::IsNotNull, self::NULL_VALUE],
-            SearchFilter::LIKE => [FilterExprFn::Like, self::sqlSearchString($value)],
-            SearchFilter::NOT_LIKE => [FilterExprFn::NotLike, self::sqlSearchString($value)],
-            SearchFilter::LIKE_STRICT => [FilterExprFn::Like, self::sqlSearchString($value, true)],
-            SearchFilter::NOT_LIKE_STRICT => [FilterExprFn::NotLike, self::sqlSearchString($value, true)],
+            SearchFilter::LIKE => [FilterExprFn::Like, self::sqlSearchString($value), true],
+            SearchFilter::NOT_LIKE => [FilterExprFn::NotLike, self::sqlSearchString($value), true],
+            SearchFilter::LIKE_STRICT => [FilterExprFn::Like, self::sqlSearchString($value, true), false],
+            SearchFilter::NOT_LIKE_STRICT => [FilterExprFn::NotLike, self::sqlSearchString($value, true), false],
             SearchFilter::LOWER => [FilterExprFn::Lower, $value],
             SearchFilter::LOWER_OR_EQUAL => [FilterExprFn::LowerOrEqual, $value],
             SearchFilter::GREATER => [FilterExprFn::Greater, $value],
@@ -184,16 +193,22 @@ final class SearchHelper
     /**
      * @param TSearchvalue $value
      */
-    private function addClauseFilter(string $key, FilterExprFn $filterExprFn, mixed $value): void
+    private function addClauseFilter(string $key, FilterExprFn $filterExprFn, mixed $value, bool $escapedLike = false): void
     {
         if (!isset($this->clauseFilters[$key])) {
             $this->clauseFilters[$key] = [];
         }
 
-        $this->clauseFilters[$key][] = [
+        $criteria = [
             'expFn' => $filterExprFn,
             'value' => $value,
         ];
+
+        if ($escapedLike) {
+            $criteria['escapedLike'] = true;
+        }
+
+        $this->clauseFilters[$key][] = $criteria;
     }
 
     /**

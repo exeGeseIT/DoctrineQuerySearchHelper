@@ -85,26 +85,23 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
         $value = $criteria['value'];
 
         if (!in_array($expFn, [FilterExprFn::In, FilterExprFn::NotIn]) && is_array($value)) {
-            $this->handleArrayValue($field, $parameterKey, $expFn, $value);
+            $this->handleArrayValue($field, $parameterKey, $expFn, $value, $criteria['escapedLike'] ?? false);
         } else {
-            $this->handleSingleValue($field, $parameterKey, $expFn, $value);
+            $this->handleSingleValue($field, $parameterKey, $expFn, $value, $criteria['escapedLike'] ?? false);
         }
     }
 
     /**
      * @param list<int|float|string> $values
      */
-    private function handleArrayValue(string $field, string $parameterKey, FilterExprFn $filterExprFn, array $values): void
+    private function handleArrayValue(string $field, string $parameterKey, FilterExprFn $filterExprFn, array $values, bool $escapedLike = false): void
     {
         $orx = null;
         foreach ($values as $i => $value) {
             $parameter = sprintf('%s_%d', $parameterKey, $i);
+            $this->queryBuilder->setParameter($parameter, $value);
 
-            /** @var CompositeExpression $compositeExpression */
-            $compositeExpression = $this->queryBuilder
-                ->setParameter($parameter, $value)
-                ->expr()->{$filterExprFn->value()}($field, ':'.$parameter)
-            ;
+            $compositeExpression = $this->buildExpression($field, ':'.$parameter, $filterExprFn, $escapedLike);
 
             if (!$orx instanceof CompositeExpression) {
                 $orx = $this->queryBuilder->expr()->or($compositeExpression);
@@ -119,15 +116,26 @@ class DBALClauseBuilder extends AbstractClauseBuilderProcessor
         }
     }
 
-    private function handleSingleValue(string $field, string $parameterKey, FilterExprFn $filterExprFn, mixed $value): void
+    private function handleSingleValue(string $field, string $parameterKey, FilterExprFn $filterExprFn, mixed $value, bool $escapedLike = false): void
     {
-        /** @var CompositeExpression $compositeExpression */
-        $compositeExpression = $this->queryBuilder->expr()->{$filterExprFn->value()}($field, ':'.$parameterKey);
-        $this->queryBuilder->andWhere($compositeExpression);
+        $this->queryBuilder->andWhere(
+            $this->buildExpression($field, ':'.$parameterKey, $filterExprFn, $escapedLike)
+        );
 
         if (SearchHelper::NULL_VALUE !== $value) {
-            $this->queryBuilder->setParameter($parameterKey, $value, $this->resolveParameterType($value));
+            $this->queryBuilder->setParameter($parameterKey, $value);
         }
+    }
+
+    private function buildExpression(string $field, string $parameter, FilterExprFn $filterExprFn, bool $escapedLike = false): string
+    {
+        $expression = $this->queryBuilder->expr()->{$filterExprFn->value()}($field, $parameter);
+
+        if ($escapedLike && in_array($filterExprFn, [FilterExprFn::Like, FilterExprFn::NotLike], true)) {
+            return sprintf("%s ESCAPE '%s'", $expression, SearchHelper::LIKE_ESCAPE_CHARACTER);
+        }
+
+        return (string) $expression;
     }
 
     private function resolveParameterType(mixed $value): ArrayParameterType|ParameterType

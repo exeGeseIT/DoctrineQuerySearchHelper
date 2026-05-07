@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace ExeGeseIT\Test\Repository;
+namespace ExeGeseIT\DoctrineQuerySearchHelper\Tests\Repository;
 
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\QueryClauseBuilder;
-use ExeGeseIT\Test\Entity\Datawarehouse;
+use ExeGeseIT\DoctrineQuerySearchHelper\Tests\Entity\Datawarehouse;
 
 /**
  * @extends EntityRepository<Datawarehouse>

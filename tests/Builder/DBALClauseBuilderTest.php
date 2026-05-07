@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ExeGeseIT\Test\Builder;
+namespace ExeGeseIT\DoctrineQuerySearchHelper\Tests\Builder;
 
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -29,10 +29,7 @@ final class DBALClauseBuilderTest extends TestCase
             $this->getNormalizedWherePart($queryBuilder)
         );
 
-        self::assertSame(
-            'CFA_MEDERIC',
-            $queryBuilder->getParameter('organizationkey_i0')
-        );
+        self::assertSame('CFA_MEDERIC', $queryBuilder->getParameter('organizationkey_i0'));
     }
 
     public function testItGeneratesNotEqualWhereClause(): void
@@ -52,10 +49,7 @@ final class DBALClauseBuilderTest extends TestCase
             $this->getNormalizedWherePart($queryBuilder)
         );
 
-        self::assertSame(
-            'BUDGET',
-            $queryBuilder->getParameter('type_i0')
-        );
+        self::assertSame('BUDGET', $queryBuilder->getParameter('type_i0'));
     }
 
     public function testItGeneratesLikeWhereClauseWithEscape(): void
@@ -75,10 +69,7 @@ final class DBALClauseBuilderTest extends TestCase
             $this->getNormalizedWherePart($queryBuilder)
         );
 
-        self::assertSame(
-            '%projet\\_100\\%%',
-            $queryBuilder->getParameter('extra3_i0')
-        );
+        self::assertSame('%projet\\_100\\%%', $queryBuilder->getParameter('extra3_i0'));
     }
 
     public function testItGeneratesLikeStrictWhereClauseWithoutEscape(): void
@@ -98,10 +89,7 @@ final class DBALClauseBuilderTest extends TestCase
             $this->getNormalizedWherePart($queryBuilder)
         );
 
-        self::assertSame(
-            'Projet%',
-            $queryBuilder->getParameter('extra3_i0')
-        );
+        self::assertSame('Projet%', $queryBuilder->getParameter('extra3_i0'));
     }
 
     public function testItGeneratesNotLikeWhereClauseWithEscape(): void
@@ -121,10 +109,7 @@ final class DBALClauseBuilderTest extends TestCase
             $this->getNormalizedWherePart($queryBuilder)
         );
 
-        self::assertSame(
-            '%projet\\_100\\%%',
-            $queryBuilder->getParameter('extra3_i0')
-        );
+        self::assertSame('%projet\\_100\\%%', $queryBuilder->getParameter('extra3_i0'));
     }
 
     public function testItGeneratesInWhereClause(): void
@@ -144,10 +129,7 @@ final class DBALClauseBuilderTest extends TestCase
             $this->getNormalizedWherePart($queryBuilder)
         );
 
-        self::assertSame(
-            [1, 2, 3],
-            $queryBuilder->getParameter('archivestatus_i0')
-        );
+        self::assertSame([1, 2, 3], $queryBuilder->getParameter('archivestatus_i0'));
     }
 
     public function testItGeneratesNotInWhereClause(): void
@@ -167,10 +149,7 @@ final class DBALClauseBuilderTest extends TestCase
             $this->getNormalizedWherePart($queryBuilder)
         );
 
-        self::assertSame(
-            [1, 2, 3],
-            $queryBuilder->getParameter('archivestatus_i0')
-        );
+        self::assertSame([1, 2, 3], $queryBuilder->getParameter('archivestatus_i0'));
     }
 
     public function testItGeneratesIsNullWhereClause(): void
@@ -230,10 +209,7 @@ final class DBALClauseBuilderTest extends TestCase
             $this->getNormalizedWherePart($queryBuilder)
         );
 
-        self::assertSame(
-            '2025-01-01',
-            $queryBuilder->getParameter('docdate_i0')
-        );
+        self::assertSame('2025-01-01', $queryBuilder->getParameter('docdate_i0'));
     }
 
     public function testItGeneratesLowerOrEqualWhereClause(): void
@@ -253,10 +229,7 @@ final class DBALClauseBuilderTest extends TestCase
             $this->getNormalizedWherePart($queryBuilder)
         );
 
-        self::assertSame(
-            '2025-12-31',
-            $queryBuilder->getParameter('docdate_i0')
-        );
+        self::assertSame('2025-12-31', $queryBuilder->getParameter('docdate_i0'));
     }
 
     public function testItGeneratesMultipleSimpleWhereClauses(): void
@@ -342,11 +315,11 @@ final class DBALClauseBuilderTest extends TestCase
                 ],
             ], null);
 
-        $where = $this->getNormalizedWherePart($queryBuilder);
+        $where = trim($this->getNormalizedWherePart($queryBuilder), '()');
 
         self::assertMatchesRegularExpression(
             '/^1=1 AND dwh\.extra1 = :[^ ]+ AND dwh\.extra2 = :[^ ]+$/',
-            trim($where, '()')
+            $where
         );
 
         self::assertContains('foo', $this->getParameterValues($queryBuilder));
@@ -369,11 +342,11 @@ final class DBALClauseBuilderTest extends TestCase
                 ],
             ], null);
 
-        $where = $this->getNormalizedWherePart($queryBuilder);
+        $where = trim($this->getNormalizedWherePart($queryBuilder), '()');
 
         self::assertMatchesRegularExpression(
             '/^1=1 AND dwh\.extra1 = :[^ ]+ AND dwh\.extra2 = :[^ ]+$/',
-            trim($where, '()')
+            $where
         );
 
         self::assertContains('foo', $this->getParameterValues($queryBuilder));
@@ -406,7 +379,57 @@ final class DBALClauseBuilderTest extends TestCase
         self::assertContains('%bar\\%%', $this->getParameterValues($queryBuilder));
     }
 
-    public function testItAppliesPaginatorSort(): void
+    public function testItGeneratesNestedCompositeWhereClause(): void
+    {
+        $queryBuilder = $this->createBaseQueryBuilder();
+
+        QueryClauseBuilder::getInstance($queryBuilder)
+            ->setSearchFields([
+                'extra1' => 'dwh.extra1',
+                'extra2' => 'dwh.extra2',
+                'extra3' => 'dwh.extra3',
+            ])
+            ->getQueryBuilder([
+                SearchFilter::andOr() => [
+                    SearchFilter::equal('extra1', false) => 'foo',
+                    SearchFilter::and() => [
+                        SearchFilter::equal('extra2', false) => 'bar',
+                        SearchFilter::equal('extra3', false) => 'baz',
+                    ],
+                ],
+            ], null);
+
+        $where = $this->getNormalizedWherePart($queryBuilder);
+
+        self::assertStringContainsString('dwh.extra1 = :', $where);
+        self::assertStringContainsString('dwh.extra2 = :', $where);
+        self::assertStringContainsString('dwh.extra3 = :', $where);
+        self::assertContains('foo', $this->getParameterValues($queryBuilder));
+        self::assertContains('bar', $this->getParameterValues($queryBuilder));
+        self::assertContains('baz', $this->getParameterValues($queryBuilder));
+    }
+
+    public function testItAppliesDefaultLikeFields(): void
+    {
+        $queryBuilder = $this->createBaseQueryBuilder();
+
+        QueryClauseBuilder::getInstance($queryBuilder)
+            ->setDefaultLikeFields([
+                'extra3' => 'dwh.extra3',
+            ])
+            ->getQueryBuilder([
+                SearchFilter::filter('extra3', false) => 'Projet_100%',
+            ], null);
+
+        self::assertSame(
+            "dwh.extra3 LIKE :extra3_i0 ESCAPE '\\'",
+            $this->getNormalizedWherePart($queryBuilder)
+        );
+
+        self::assertSame('%projet\\_100\\%%', $queryBuilder->getParameter('extra3_i0'));
+    }
+
+    public function testItReplacesInitialOrderByWithPaginatorSort(): void
     {
         $queryBuilder = $this->createBaseQueryBuilder();
         $queryBuilder->orderBy('dwh.modifieddate', 'DESC');

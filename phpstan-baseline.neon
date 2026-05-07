@@ -1,21 +1,10 @@
 parameters:
     ignoreErrors:
         -
-            message: '#^Cannot cast mixed to string\.$#'
-            identifier: cast.string
-            path: tests/Builder/DQLClauseBuilderTest.php
-
-        -
             message: '#^PHPDoc tag @var with type array\<string, array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\> is not subtype of type array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\.$#'
             identifier: varTag.type
             count: 1
-            path: src/Builder/DBALClauseBuilder.php
-
-        -
-            message: '#^PHPDoc tag @var with type array\<string, array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\> is not subtype of type array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\.$#'
-            identifier: varTag.type
-            count: 1
-            path: src/Builder/DQLClauseBuilder.php
+            path: src/Builder/AbstractDoctrineClauseBuilder.php
 
         -
             message: '#^Offset 1 might not exist on array\{\}\|array\{non\-falsy\-string, non\-empty\-string\}\.$#'
@@ -42,31 +31,19 @@ parameters:
             path: src/SearchHelper.php
 
         -
-            message: '#^Parameter \#4 \$escapedLike of method ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:addClauseFilter\(\) expects bool, bool\|ExeGeseIT\\DoctrineQuerySearchHelper\\FilterExprFn\|float\|int\|list\<float\|int\|string\>\|string given\.$#'
-            identifier: argument.type
-            count: 1
-            path: src/SearchHelper.php
-
-        -
             message: '#^Property ExeGeseIT\\DoctrineQuerySearchHelper\\SearchHelper\:\:\$clauseFilters \(array\<string, array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\>\) does not accept non\-empty\-array\<string, array\<int\<0, max\>\|string, array\<int\<0, max\>\|string, ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\|list\<ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\|ExeGeseIT\\DoctrineQuerySearchHelper\\ValueObject\\WhereCriteria\>\>\.$#'
             identifier: assign.propertyType
             count: 1
             path: src/SearchHelper.php
 
         -
-            message: '#^Parameter \#1 \$search of method ExeGeseIT\\DoctrineQuerySearchHelper\\Builder\\DQLClauseBuilder\:\:getQueryBuilder\(\) expects array\<string, array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|float\|int\|string\>\|null, array\<string, mixed\> given\.$#'
-            identifier: argument.type
-            count: 1
-            path: tests/Repository/DatawarehouseRepository.php
+            message: '#^Cannot cast mixed to string\.$#'
+            identifier: cast.string
+            path: tests/Builder/DQLClauseBuilderTest.php
 
         -
-            message: '#^Parameter \#1 \$search of method ExeGeseIT\\DoctrineQuerySearchHelper\\Builder\\DQLClauseBuilder\:\:getQueryBuilder\(\) expects array\<string, array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|float\|int\|string\>\|null, array\<string, mixed\> given\.$#'
+            message: '#^Parameter \#1 \$search of method ExeGeseIT\\DoctrineQuerySearchHelper\\Builder\\AbstractDoctrineClauseBuilder\<Doctrine\\ORM\\QueryBuilder\>\:\:getQueryBuilder\(\) expects array\<string, array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|float\|int\|string\>\|null, array\<string, mixed\> given\.$#'
             identifier: argument.type
-            count: 1
-            path: tests/Repository/DatawarehouseaccountingRepository.php
-
-        -
-            message: '#^Call to an undefined method Doctrine\\ORM\\EntityRepository\<ExeGeseIT\\Test\\Entity\\Datawarehouseaccounting\>\:\:fetchDatawarehouseaccountingQb\(\)\.$#'
-            identifier: method.notFound
-            count: 1
-            path: tests/test2.php
+            paths:
+                - tests/Repository/DatawarehouseRepository.php
+                - tests/Repository/DatawarehouseaccountingRepository.php

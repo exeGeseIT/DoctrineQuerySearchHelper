@@ -52,7 +52,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "ExeGeseIT\\Test\\": "tests/"
+            "ExeGeseIT\\DoctrineQuerySearchHelper\\Tests\\": "tests/"
         }
     }
 }

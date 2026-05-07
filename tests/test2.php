@@ -7,11 +7,11 @@ require_once __DIR__.'/../vendor/autoload.php';
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
-use Doctrine\ORM\QueryBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\QueryClauseBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
-use ExeGeseIT\Test\Entity\Datawarehouseaccounting;
+use ExeGeseIT\DoctrineQuerySearchHelper\Tests\Entity\Datawarehouseaccounting;
+use ExeGeseIT\DoctrineQuerySearchHelper\Tests\Repository\DatawarehouseaccountingRepository;
 use Symfony\Component\VarExporter\VarExporter;
 
 // Create a simple "default" Doctrine ORM configuration for Attributes
@@ -37,6 +37,7 @@ $searchData = [
     SearchFilter::equal('extra1') => 'Frais Generaux',
     SearchFilter::equal('extra2') => 'Frais Generaux',
     SearchFilter::like('extra3') => 'Projet',
+    SearchFilter::filter('supervisor') => ['edouard', 'villeneuve'],
     SearchFilter::andOr() => [
         SearchFilter::equal('glaccount') => '64510000 - COTISATIONS URSSAF',
         SearchFilter::equal('glaccount') => '',
@@ -51,7 +52,8 @@ echo "\n";
 echo SearchHelper::dumpParsedSearchParameters($searchData, pretty: true);
 echo "\n";
 
-/** @var QueryBuilder $queryBuilder */
-$queryBuilder = $entityManager->getRepository(Datawarehouseaccounting::class)->fetchDatawarehouseaccountingQb($searchData);
+/** @var DatawarehouseaccountingRepository $repository */
+$repository = $entityManager->getRepository(Datawarehouseaccounting::class);
+$queryBuilder = $repository->fetchDatawarehouseaccountingQb($searchData);
 
 echo sprintf("\n%s\n", QueryClauseBuilder::dumpQueryClause($queryBuilder));

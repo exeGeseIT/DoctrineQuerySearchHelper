@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ExeGeseIT\Test;
+namespace ExeGeseIT\DoctrineQuerySearchHelper\Tests;
 
 use ExeGeseIT\DoctrineQuerySearchHelper\FilterExprFn;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;

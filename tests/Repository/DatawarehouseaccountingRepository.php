@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace ExeGeseIT\Test\Repository;
+namespace ExeGeseIT\DoctrineQuerySearchHelper\Tests\Repository;
 
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\Builder\DQLClauseBuilder;
-use ExeGeseIT\Test\Entity\Datawarehouseaccounting;
+use ExeGeseIT\DoctrineQuerySearchHelper\Tests\Entity\Datawarehouseaccounting;
 
 /**
  * @extends EntityRepository<Datawarehouseaccounting>
@@ -52,13 +52,6 @@ class DatawarehouseaccountingRepository extends EntityRepository
                 'bu' => 'dwh.businessunit',
                 'businessunit' => 'dwh.businessunit',
 
-                'reference' => 'dwh.reference',
-                'externalref' => 'dwh.externalref',
-
-                'poref' => 'dwh.poref',
-                'orderref' => 'dwh.poref',
-                'internalref' => 'dwh.poref',
-
                 'extra1' => 'dwh.extra1',
                 'extra2' => 'dwh.extra2',
                 'extra3' => 'dwh.extra3',
@@ -71,7 +64,6 @@ class DatawarehouseaccountingRepository extends EntityRepository
                 'extra10' => 'dwh.extra10',
 
                 'currency' => 'dwh.currency',
-                'supervisor' => 'dwh.supervisor',
 
                 'docdate' => 'dwh.docdate',
                 'docdate_year' => 'YEAR(dwh.docdate)',
@@ -84,6 +76,15 @@ class DatawarehouseaccountingRepository extends EntityRepository
 
                 'archivestatus' => 'dwh.archivestatus',
                 'zstatus' => 'dwh.archivestatus',
+            ])
+            ->setDefaultLikeFields([
+                'supervisor' => 'dwh.supervisor',
+                'reference' => 'dwh.reference',
+                'externalref' => 'dwh.externalref',
+
+                'poref' => 'dwh.poref',
+                'orderref' => 'dwh.poref',
+                'internalref' => 'dwh.poref',
             ])
         ;
 

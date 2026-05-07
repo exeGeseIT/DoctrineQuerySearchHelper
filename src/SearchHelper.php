@@ -139,7 +139,7 @@ final class SearchHelper
             }
 
             [$filterExprFn, $processedValue, $escapedLike] = array_pad($filterResult, 3, false);
-            $this->addClauseFilter($key, $filterExprFn, $processedValue, $escapedLike);
+            $this->addClauseFilter($key, $filterExprFn, $processedValue, (bool) $escapedLike);
         }
     }
 

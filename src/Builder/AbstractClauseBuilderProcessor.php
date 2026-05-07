@@ -16,9 +16,9 @@ use ExeGeseIT\DoctrineQuerySearchHelper\ValueObject\WhereCriteria;
  *
  * @phpstan-import-type TSearch from SearchHelper
  *
- * @template T of QueryBuilder|QueryBuilderDBAL
+ * @template TQueryBuilder of QueryBuilder|QueryBuilderDBAL
  *
- * @implements ClauseBuilderInterface<T>
+ * @implements ClauseBuilderInterface<TQueryBuilder>
  */
 abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
 {
@@ -35,7 +35,7 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
     /**
      * @param TSearch|null $search
      *
-     * @return T
+     * @return TQueryBuilder
      */
     abstract public function getQueryBuilder(?array $search, ?string $paginatorSort): QueryBuilder|QueryBuilderDBAL;
 
@@ -88,7 +88,10 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
         foreach ($search as $searchfilter => $value) {
             $decodedFilter = SearchFilter::decodeSearchfilter($searchfilter);
 
-            if ('' === $decodedFilter['filter'] && in_array($decodedFilter['key'], $this->defaultLike, true)) {
+            if (
+                in_array($decodedFilter['key'], $this->defaultLike, true)
+                && $this->isDefaultFilter($decodedFilter['filter'])
+            ) {
                 $normalizedSearch[SearchFilter::like($decodedFilter['key'])] = $value;
                 continue;
             }
@@ -97,6 +100,11 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
         }
 
         return $normalizedSearch;
+    }
+
+    private function isDefaultFilter(string $filter): bool
+    {
+        return '' === $filter || SearchFilter::FILTER === $filter;
     }
 
     /**

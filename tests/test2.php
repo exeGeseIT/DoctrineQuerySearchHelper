@@ -10,8 +10,8 @@ use Doctrine\ORM\ORMSetup;
 use ExeGeseIT\DoctrineQuerySearchHelper\QueryClauseBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
-use ExeGeseIT\DoctrineQuerySearchHelper\Tests\Entity\Datawarehouseaccounting;
-use ExeGeseIT\DoctrineQuerySearchHelper\Tests\Repository\DatawarehouseaccountingRepository;
+use ExeGeseIT\DoctrineQuerySearchHelper\Tests\Fixtures\Entity\Datawarehouseaccounting;
+use ExeGeseIT\DoctrineQuerySearchHelper\Tests\Fixtures\Repository\DatawarehouseaccountingRepository;
 use Symfony\Component\VarExporter\VarExporter;
 
 // Create a simple "default" Doctrine ORM configuration for Attributes

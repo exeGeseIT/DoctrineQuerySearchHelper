@@ -10,7 +10,7 @@ use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\QueryBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\QueryClauseBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchFilter;
-use ExeGeseIT\DoctrineQuerySearchHelper\Tests\Entity\Datawarehouse;
+use ExeGeseIT\DoctrineQuerySearchHelper\Tests\Fixtures\Entity\Datawarehouse;
 use PHPUnit\Framework\TestCase;
 
 final class DQLClauseBuilderTest extends TestCase
@@ -459,7 +459,7 @@ final class DQLClauseBuilderTest extends TestCase
             ->getQueryBuilder([], 'dwh.organizationkey ASC');
 
         self::assertSame(
-            'SELECT dwh FROM ExeGeseIT\DoctrineQuerySearchHelper\Tests\Entity\Datawarehouse dwh ORDER BY dwh.organizationkey ASC, dwh.modifieddate DESC',
+            'SELECT dwh FROM ExeGeseIT\DoctrineQuerySearchHelper\Tests\Fixtures\Entity\Datawarehouse dwh ORDER BY dwh.organizationkey ASC, dwh.modifieddate DESC',
             $this->normalizeDql($queryBuilder->getDQL())
         );
     }

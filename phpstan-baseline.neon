@@ -42,8 +42,20 @@ parameters:
             path: tests/Builder/DQLClauseBuilderTest.php
 
         -
+            message: '#^Parameter \#1 \$search of method ExeGeseIT\\DoctrineQuerySearchHelper\\Builder\\AbstractDoctrineClauseBuilder\<Doctrine\\DBAL\\Query\\QueryBuilder\>\:\:getQueryBuilder\(\) expects array\<string, array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|float\|int\|string\>\|null, non\-empty\-array\<string, non\-empty\-array\<string, ''foo''\|non\-empty\-array\<string, ''bar''\|''baz''\>\>\> given\.$#'
+            identifier: argument.type
+            count: 1
+            path: tests/Builder/DBALClauseBuilderTest.php
+
+        -
+            message: '#^Parameter \#1 \$search of method ExeGeseIT\\DoctrineQuerySearchHelper\\Builder\\AbstractDoctrineClauseBuilder\<Doctrine\\ORM\\QueryBuilder\>\:\:getQueryBuilder\(\) expects array\<string, array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|float\|int\|string\>\|null, non\-empty\-array\<string, non\-empty\-array\<string, ''foo''\|non\-empty\-array\<string, ''bar''\|''baz''\>\>\> given\.$#'
+            identifier: argument.type
+            count: 1
+            path: tests/Builder/DQLClauseBuilderTest.php
+
+        -
             message: '#^Parameter \#1 \$search of method ExeGeseIT\\DoctrineQuerySearchHelper\\Builder\\AbstractDoctrineClauseBuilder\<Doctrine\\ORM\\QueryBuilder\>\:\:getQueryBuilder\(\) expects array\<string, array\<int\<0, max\>\|string, bool\|float\|int\|list\<float\|int\|string\>\|string\>\|bool\|float\|int\|string\>\|null, array\<string, mixed\> given\.$#'
             identifier: argument.type
             paths:
-                - tests/Repository/DatawarehouseRepository.php
-                - tests/Repository/DatawarehouseaccountingRepository.php
+                - tests/Fixtures/Repository/DatawarehouseRepository.php
+                - tests/Fixtures/Repository/DatawarehouseaccountingRepository.php

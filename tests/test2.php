@@ -23,7 +23,7 @@ $config = ORMSetup::createAttributeMetadataConfiguration(
 // configuring the database connection
 $connection = DriverManager::getConnection([
     'driver' => 'pdo_sqlite',
-    'path' => __DIR__.'/db.sqlite',
+    'path' => __DIR__.'/Fixtures/db.sqlite',
 ], $config);
 
 // obtaining the entity manager

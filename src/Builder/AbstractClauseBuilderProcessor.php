@@ -12,8 +12,6 @@ use ExeGeseIT\DoctrineQuerySearchHelper\ValueObject\SortCriteria;
 use ExeGeseIT\DoctrineQuerySearchHelper\ValueObject\WhereCriteria;
 
 /**
- * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
- *
  * @phpstan-import-type TSearch from SearchHelper
  *
  * @template TQueryBuilder of QueryBuilder|QueryBuilderDBAL

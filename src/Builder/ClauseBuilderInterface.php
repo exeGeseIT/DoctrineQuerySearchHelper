@@ -9,8 +9,6 @@ use Doctrine\ORM\QueryBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
 
 /**
- * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
- *
  * @phpstan-import-type TSearch from SearchHelper
  *
  * @template-covariant  T of QueryBuilder|QueryBuilderDBAL

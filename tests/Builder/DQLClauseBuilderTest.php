@@ -20,7 +20,7 @@ final class DQLClauseBuilderTest extends TestCase
     protected function setUp(): void
     {
         $configuration = ORMSetup::createAttributeMetadataConfiguration(
-            paths: [__DIR__.'/../Entity'],
+            paths: [__DIR__ . '/../Entity'],
             isDevMode: true,
         );
 

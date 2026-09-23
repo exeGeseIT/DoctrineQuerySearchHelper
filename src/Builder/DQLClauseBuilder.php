@@ -16,16 +16,14 @@ use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
  * Cette classe ne contient que les spécificités ORM. L'algorithme commun de
  * construction des clauses WHERE est porté par AbstractDoctrineClauseBuilder.
  *
- * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
- *
  * @extends AbstractDoctrineClauseBuilder<QueryBuilder>
+ * @see \ExeGeseIT\DoctrineQuerySearchHelper\Tests\Builder\DQLClauseBuilderTest
  */
 class DQLClauseBuilder extends AbstractDoctrineClauseBuilder
 {
     public function __construct(
         private readonly QueryBuilder $queryBuilder,
-    ) {
-    }
+    ) {}
 
     protected function getWrappedQueryBuilder(): QueryBuilder
     {
@@ -34,12 +32,14 @@ class DQLClauseBuilder extends AbstractDoctrineClauseBuilder
 
     protected function createAndComposite(): Composite
     {
-        return $this->queryBuilder->expr()->andX();
+        return $this->queryBuilder->expr()
+            ->andX();
     }
 
     protected function createOrComposite(): Composite
     {
-        return $this->queryBuilder->expr()->orX();
+        return $this->queryBuilder->expr()
+            ->orX();
     }
 
     protected function addToComposite(\Stringable $stringable, string|\Stringable $expression): Composite
@@ -74,7 +74,8 @@ class DQLClauseBuilder extends AbstractDoctrineClauseBuilder
         $expression = match ($filterExprFn) {
             FilterExprFn::IsNull,
             FilterExprFn::IsNotNull => $this->queryBuilder->expr()->{$filterExprFn->value}($field),
-            default => $this->queryBuilder->expr()->{$filterExprFn->value}($field, $parameter),
+            default => $this->queryBuilder->expr()
+                ->{$filterExprFn->value}($field, $parameter),
         };
 
         if ($escapedLike && in_array($filterExprFn, [FilterExprFn::Like, FilterExprFn::NotLike], true)) {

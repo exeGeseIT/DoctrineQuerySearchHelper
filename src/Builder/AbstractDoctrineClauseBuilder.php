@@ -18,8 +18,6 @@ use ExeGeseIT\DoctrineQuerySearchHelper\ValueObject\WhereCriteria;
  * simples et composites. Les différences entre ORM et DBAL sont déléguées aux
  * classes concrètes via des méthodes abstraites.
  *
- * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
- *
  * @phpstan-import-type TSearch from SearchHelper
  *
  * @template TQueryBuilder of QueryBuilder|QueryBuilderDBAL
@@ -122,7 +120,7 @@ abstract class AbstractDoctrineClauseBuilder extends AbstractClauseBuilderProces
 
             $orExpression = $this->addToComposite(
                 $orExpression,
-                $this->buildExpression($field, ':'.$parameter, $filterExprFn, $escapedLike),
+                $this->buildExpression($field, ':' . $parameter, $filterExprFn, $escapedLike),
             );
         }
 
@@ -137,7 +135,7 @@ abstract class AbstractDoctrineClauseBuilder extends AbstractClauseBuilderProces
         bool $escapedLike = false,
     ): void {
         $this->andWhere(
-            $this->buildExpression($field, ':'.$parameterKey, $filterExprFn, $escapedLike),
+            $this->buildExpression($field, ':' . $parameterKey, $filterExprFn, $escapedLike),
         );
 
         if (SearchHelper::NULL_VALUE !== $value) {
@@ -223,7 +221,7 @@ abstract class AbstractDoctrineClauseBuilder extends AbstractClauseBuilderProces
 
                         $orStatements = $this->addToComposite(
                             $orStatements,
-                            $this->buildExpression($field, ':'.$parameter, $criteria->filterExprFn, $criteria->escapedLike),
+                            $this->buildExpression($field, ':' . $parameter, $criteria->filterExprFn, $criteria->escapedLike),
                         );
                     }
 
@@ -234,7 +232,7 @@ abstract class AbstractDoctrineClauseBuilder extends AbstractClauseBuilderProces
 
                 $compositeStatement = $this->addToComposite(
                     $compositeStatement,
-                    $this->buildExpression($field, ':'.$searchKeyParameter, $criteria->filterExprFn, $criteria->escapedLike),
+                    $this->buildExpression($field, ':' . $searchKeyParameter, $criteria->filterExprFn, $criteria->escapedLike),
                 );
 
                 if (SearchHelper::NULL_VALUE !== $criteria->value) {

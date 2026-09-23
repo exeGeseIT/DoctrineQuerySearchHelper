@@ -18,8 +18,7 @@ final readonly class WhereCriteria
         public FilterExprFn $filterExprFn,
         public mixed $value,
         public bool $escapedLike = false,
-    ) {
-    }
+    ) {}
 
     public function hasArrayValue(): bool
     {

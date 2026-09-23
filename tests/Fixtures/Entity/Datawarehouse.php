@@ -29,10 +29,8 @@ final class Datawarehouse
         #[ORM\GeneratedValue(strategy: 'IDENTITY')]
         #[ORM\Column(name: 'iddatawarehouse', type: Types::BIGINT)]
         private ?string $id = null,
-
         #[ORM\Column(name: 'organization_keyorganization', length: 255)]
         private ?string $organizationkey = null,
-
         #[ORM\Column(name: 'zeendoc_collid', length: 255)]
         private ?string $collid = null,
         #[ORM\Column(name: 'zeendoc_resid', type: Types::BIGINT)]

@@ -8,10 +8,9 @@ use ExeGeseIT\DoctrineQuerySearchHelper\ValueObject\WhereCriteria;
 use Nette\Utils\Json;
 
 /**
- * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
- *
  * @phpstan-type TSearchvalue float|int|string|list<float|int|string>
  * @phpstan-type TSearch array<string, bool|TSearchvalue|array<string, bool|TSearchvalue>>
+ * @see \ExeGeseIT\DoctrineQuerySearchHelper\Tests\SearchHelperTest
  */
 final class SearchHelper
 {
@@ -107,9 +106,9 @@ final class SearchHelper
         $escapeCharacter = self::LIKE_ESCAPE_CHARACTER;
 
         return strtr($value, [
-            $escapeCharacter => $escapeCharacter.$escapeCharacter,
-            '%' => $escapeCharacter.'%',
-            '_' => $escapeCharacter.'_',
+            $escapeCharacter => $escapeCharacter . $escapeCharacter,
+            '%' => $escapeCharacter . '%',
+            '_' => $escapeCharacter . '_',
         ]);
     }
 
@@ -194,9 +193,7 @@ final class SearchHelper
      */
     private function addClauseFilter(string $key, FilterExprFn $filterExprFn, mixed $value, bool $escapedLike = false): void
     {
-        if (!isset($this->clauseFilters[$key])) {
-            $this->clauseFilters[$key] = [];
-        }
+        $this->clauseFilters[$key] ??= [];
 
         $this->clauseFilters[$key][] = new WhereCriteria(
             filterExprFn: $filterExprFn,

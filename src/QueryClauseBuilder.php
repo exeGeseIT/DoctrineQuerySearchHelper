@@ -12,14 +12,9 @@ use ExeGeseIT\DoctrineQuerySearchHelper\Builder\ClauseBuilderInterface;
 use ExeGeseIT\DoctrineQuerySearchHelper\Builder\DBALClauseBuilder;
 use ExeGeseIT\DoctrineQuerySearchHelper\Builder\DQLClauseBuilder;
 
-/**
- * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
- */
 final class QueryClauseBuilder
 {
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
     /**
      * @template T of QueryBuilder|QueryBuilderDBAL
@@ -39,7 +34,8 @@ final class QueryClauseBuilder
     public static function dumpQueryClause(QueryBuilder|QueryBuilderDBAL $qb, bool $highlighted = true, bool $compressed = false, bool $returnFullQuery = false): string
     {
         $sql = match (true) {
-            $qb instanceof QueryBuilder => $qb->getQuery()->getSQL(),
+            $qb instanceof QueryBuilder => $qb->getQuery()
+                ->getSQL(),
             default => $qb->getSQL(),
         };
 
@@ -47,7 +43,7 @@ final class QueryClauseBuilder
 
         $clause = $returnFullQuery ? $sql : match (preg_match('/FROM(.+)$/s', $sql, $matches)) {
             false => $sql,
-            default => '... FROM '.$matches[1],
+            default => '... FROM ' . $matches[1],
         };
 
         $sqlFormatter = new SqlFormatter($highlighted ? null : new NullHighlighter());

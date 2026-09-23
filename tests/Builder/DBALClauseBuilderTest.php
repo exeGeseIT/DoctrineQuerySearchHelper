@@ -169,7 +169,7 @@ final class DBALClauseBuilderTest extends TestCase
             $this->getNormalizedWherePart($queryBuilder)
         );
 
-        self::assertFalse(array_key_exists('extra3_i0', $queryBuilder->getParameters()));
+        self::assertArrayNotHasKey('extra3_i0', $queryBuilder->getParameters());
     }
 
     public function testItGeneratesIsNotNullWhereClause(): void
@@ -189,7 +189,7 @@ final class DBALClauseBuilderTest extends TestCase
             $this->getNormalizedWherePart($queryBuilder)
         );
 
-        self::assertFalse(array_key_exists('extra3_i0', $queryBuilder->getParameters()));
+        self::assertArrayNotHasKey('extra3_i0', $queryBuilder->getParameters());
     }
 
     public function testItGeneratesGreaterOrEqualWhereClause(): void

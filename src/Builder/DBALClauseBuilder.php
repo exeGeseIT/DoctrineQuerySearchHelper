@@ -17,16 +17,14 @@ use ExeGeseIT\DoctrineQuerySearchHelper\SearchHelper;
  * Cette classe ne contient que les spécificités DBAL. L'algorithme commun de
  * construction des clauses WHERE est porté par AbstractDoctrineClauseBuilder.
  *
- * @author Jean-Claude GLOMBARD <jc.glombard@gmail.com>
- *
  * @extends AbstractDoctrineClauseBuilder<DBALQueryBuilder>
+ * @see \ExeGeseIT\DoctrineQuerySearchHelper\Tests\Builder\DBALClauseBuilderTest
  */
 class DBALClauseBuilder extends AbstractDoctrineClauseBuilder
 {
     public function __construct(
         private readonly DBALQueryBuilder $dbalQueryBuilder,
-    ) {
-    }
+    ) {}
 
     protected function getWrappedQueryBuilder(): DBALQueryBuilder
     {
@@ -35,12 +33,14 @@ class DBALClauseBuilder extends AbstractDoctrineClauseBuilder
 
     protected function createAndComposite(): CompositeExpression
     {
-        return $this->dbalQueryBuilder->expr()->and('1=1');
+        return $this->dbalQueryBuilder->expr()
+            ->and('1=1');
     }
 
     protected function createOrComposite(): CompositeExpression
     {
-        return $this->dbalQueryBuilder->expr()->or('1=0');
+        return $this->dbalQueryBuilder->expr()
+            ->or('1=0');
     }
 
     protected function addToComposite(\Stringable $stringable, string|\Stringable $expression): CompositeExpression
@@ -81,7 +81,8 @@ class DBALClauseBuilder extends AbstractDoctrineClauseBuilder
             FilterExprFn::IsNotNull => $this->dbalQueryBuilder->expr()->{$filterExprFn->value}($field),
             FilterExprFn::Like,
             FilterExprFn::NotLike => $this->dbalQueryBuilder->expr()->{$filterExprFn->value}($field, $parameter, $escapeChar),
-            default => $this->dbalQueryBuilder->expr()->{$filterExprFn->value}($field, $parameter),
+            default => $this->dbalQueryBuilder->expr()
+                ->{$filterExprFn->value}($field, $parameter),
         };
     }
 
@@ -102,7 +103,7 @@ class DBALClauseBuilder extends AbstractDoctrineClauseBuilder
 
     private function quoteLikeEscapeCharacter(): string
     {
-        return "'".str_replace("'", "''", SearchHelper::LIKE_ESCAPE_CHARACTER)."'";
+        return "'" . str_replace("'", "''", SearchHelper::LIKE_ESCAPE_CHARACTER) . "'";
     }
 
     private function resolveParameterType(mixed $value): ArrayParameterType|ParameterType

@@ -33,8 +33,7 @@ final class Datawarehouseaccounting
             'default' => 'CURRENT_TIMESTAMP',
         ])]
         private ?\DateTimeImmutable $modifieddate = null,
-    ) {
-    }
+    ) {}
 
     public function getId(): ?int
     {

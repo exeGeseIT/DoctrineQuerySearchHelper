@@ -9,6 +9,5 @@ final readonly class SortCriteria
     public function __construct(
         public string $field,
         public string $direction,
-    ) {
-    }
+    ) {}
 }

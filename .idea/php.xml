@@ -74,6 +74,7 @@
       <path value="$PROJECT_DIR$/vendor/tomasvotruba/cognitive-complexity" />
       <path value="$PROJECT_DIR$/vendor/tomasvotruba/type-coverage" />
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php86" />
+      <path value="$PROJECT_DIR$/vendor/staabm/side-effects-detector" />
     </include_path>
   </component>
   <component name="PhpStan">

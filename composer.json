@@ -28,6 +28,15 @@
         "tomasvotruba/type-coverage": "^2.0"
     },
     "scripts": {
+        "lint": [
+            "@cs:phpstan",
+            "@cs:rector",
+            "@cs:ecs"
+        ],
+        "lint:fix": [
+            "@cs:rector:fix",
+            "@cs:ecs:fix"
+        ],
         "cs:phpstan": "@php vendor/bin/phpstan analyze --ansi",
         "cs:phpstan:cache:clear-result": "@php vendor/bin/phpstan clear-result-cache --ansi",
         "cs:rector": "@php vendor/bin/rector --dry-run --ansi",

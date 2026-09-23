@@ -17,6 +17,7 @@ use ExeGeseIT\DoctrineQuerySearchHelper\ValueObject\WhereCriteria;
  * @template TQueryBuilder of QueryBuilder|QueryBuilderDBAL
  *
  * @implements ClauseBuilderInterface<TQueryBuilder>
+ * @see \ExeGeseIT\DoctrineQuerySearchHelper\Tests\Builder\AbstractClauseBuilderProcessorTest
  */
 abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
 {
@@ -124,21 +125,25 @@ abstract class AbstractClauseBuilderProcessor implements ClauseBuilderInterface
                 continue;
             }
 
-            $field = $parts[0];
+            $fields = $parts[0];
             $direction = strtoupper($parts[1] ?? 'ASC');
-
-            if (!(bool) preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $field)) {
-                continue;
-            }
 
             if (!in_array($direction, ['ASC', 'DESC'], true)) {
                 $direction = 'ASC';
             }
 
-            $sorts[] = new SortCriteria(
-                field: $field,
-                direction: $direction,
-            );
+            foreach (explode('+', $fields) as $field) {
+                $field = trim($field);
+
+                if (!(bool) preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $field)) {
+                    continue;
+                }
+
+                $sorts[] = new SortCriteria(
+                    field: $field,
+                    direction: $direction,
+                );
+            }
         }
 
         return $sorts;

@@ -5,6 +5,7 @@
         bootstrap="vendor/autoload.php"
         colors="true"
         cacheDirectory="tmp/phpunit"
+        displayDetailsOnPhpunitDeprecations="true"
 >
     <testsuites>
         <testsuite name="DoctrineQuerySearchHelper Test Suite">
